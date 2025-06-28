@@ -1,12 +1,95 @@
-// CSV upload functionality
+// Smart Import Tools for Multiple Platforms
+const PLATFORM_MAPPINGS = {
+    shopee: {
+        name: 'Shopee',
+        columns: {
+            'Order ID': 'order_id',
+            'Order Status': 'status',
+            'Total Amount': 'amount',
+            'Product Name': 'description',
+            'Order Complete Time': 'date'
+        },
+        sampleHeaders: ['Order ID', 'Order Status', 'Product Name', 'Total Amount', 'Order Complete Time'],
+        color: '#EE4D2D'
+    },
+    tiktok: {
+        name: 'TikTok Shop',
+        columns: {
+            'Order ID': 'order_id',
+            'Order Status': 'status',
+            'Product Total': 'amount',
+            'Product Name': 'description',
+            'Order Create Time': 'date'
+        },
+        sampleHeaders: ['Order ID', 'Order Status', 'Product Name', 'Product Total', 'Order Create Time'],
+        color: '#000000'
+    },
+    lazada: {
+        name: 'Lazada',
+        columns: {
+            'Order Number': 'order_id',
+            'Status': 'status',
+            'Item Price': 'amount',
+            'Item Name': 'description',
+            'Created at': 'date'
+        },
+        sampleHeaders: ['Order Number', 'Status', 'Item Name', 'Item Price', 'Created at'],
+        color: '#0F136D'
+    }
+};
 
 function showCSVUpload() {
     document.getElementById('csvModal').classList.remove('hidden');
+    initializePlatformSelector();
 }
 
 function hideCSVUpload() {
     document.getElementById('csvModal').classList.add('hidden');
     document.getElementById('csvUploadForm').reset();
+    clearPreviewData();
+}
+
+function initializePlatformSelector() {
+    const platformSelect = document.getElementById('platform-select');
+    if (platformSelect) {
+        platformSelect.innerHTML = `
+            <option value="">Pilih platform...</option>
+            ${Object.entries(PLATFORM_MAPPINGS).map(([key, platform]) => 
+                `<option value="${key}">${platform.name}</option>`
+            ).join('')}
+        `;
+        
+        platformSelect.addEventListener('change', function() {
+            updatePlatformInfo(this.value);
+        });
+    }
+}
+
+function updatePlatformInfo(platform) {
+    const infoDiv = document.getElementById('platform-info');
+    if (!platform) {
+        infoDiv.innerHTML = '';
+        return;
+    }
+    
+    const platformData = PLATFORM_MAPPINGS[platform];
+    infoDiv.innerHTML = `
+        <div class="p-4 rounded-lg" style="background-color: ${platformData.color}10; border: 1px solid ${platformData.color}30;">
+            <h3 class="font-semibold text-gray-800 mb-2">${platformData.name} CSV Format</h3>
+            <p class="text-sm text-gray-600 mb-3">Header yang dijangka:</p>
+            <div class="flex flex-wrap gap-2">
+                ${platformData.sampleHeaders.map(header => 
+                    `<span class="bg-white px-2 py-1 rounded text-xs border" style="color: ${platformData.color};">${header}</span>`
+                ).join('')}
+            </div>
+            <div class="mt-3">
+                <button type="button" onclick="downloadSampleCSV('${platform}')" 
+                        class="text-sm text-blue-600 hover:underline">
+                    📥 Download Sample CSV
+                </button>
+            </div>
+        </div>
+    `;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -17,20 +100,55 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+function downloadSampleCSV(platform) {
+    const platformData = PLATFORM_MAPPINGS[platform];
+    const headers = platformData.sampleHeaders;
+    
+    // Create sample data
+    const sampleData = [
+        headers,
+        ['ORD001', 'Completed', 'Sample Product 1', '29.90', '2025-01-15 10:30:00'],
+        ['ORD002', 'Completed', 'Sample Product 2', '45.50', '2025-01-15 14:20:00'],
+        ['ORD003', 'Completed', 'Sample Product 3', '78.00', '2025-01-15 16:45:00']
+    ];
+    
+    const csvContent = sampleData.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sample_${platform}_orders.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+
+function clearPreviewData() {
+    const previewDiv = document.getElementById('csv-preview');
+    if (previewDiv) {
+        previewDiv.innerHTML = '';
+    }
+}
+
 async function handleCSVUpload(event) {
     event.preventDefault();
     
     const formData = new FormData(event.target);
     const fileInput = formData.get('csv_file');
+    const platform = formData.get('platform');
     
     if (!fileInput || fileInput.size === 0) {
-        App.showNotification('Sila pilih fail CSV', 'error');
+        showNotification('Sila pilih fail CSV', 'error');
+        return;
+    }
+    
+    if (!platform) {
+        showNotification('Sila pilih platform', 'error');
         return;
     }
     
     // Validate file type
     if (!fileInput.name.toLowerCase().endsWith('.csv')) {
-        App.showNotification('Sila pilih fail CSV yang sah', 'error');
+        showNotification('Sila pilih fail CSV yang sah', 'error');
         return;
     }
     
@@ -41,6 +159,19 @@ async function handleCSVUpload(event) {
     submitButton.disabled = true;
     
     try {
+        // Preview CSV before uploading
+        const csvText = await fileInput.text();
+        const isValid = await validatePlatformCSV(csvText, platform);
+        
+        if (!isValid) {
+            submitButton.innerHTML = originalText;
+            submitButton.disabled = false;
+            return;
+        }
+        
+        // Add platform to form data
+        formData.append('platform', platform);
+        
         const response = await fetch('/upload_csv', {
             method: 'POST',
             body: formData
