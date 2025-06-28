@@ -52,7 +52,15 @@ def index():
 @app.route('/add_transaction')
 def add_transaction():
     """Add transaction page"""
-    return render_template('add_transaction.html')
+    # Get pre-filled data from query parameters (from Quick Add)
+    transaction_type = request.args.get('type', '')
+    channel = request.args.get('channel', '')
+    category = request.args.get('category', '')
+    
+    return render_template('add_transaction.html', 
+                         prefill_type=transaction_type,
+                         prefill_channel=channel,
+                         prefill_category=category)
 
 @app.route('/add_transaction', methods=['POST'])
 def add_transaction_post():
@@ -288,3 +296,41 @@ def delete_transaction(transaction_id):
     db.session.commit()
     flash('Transaksi berjaya dipadam!', 'success')
     return redirect(url_for('index'))
+
+@app.route('/settings')
+def settings():
+    """Business settings page"""
+    business_settings = BusinessSettings.query.first()
+    if not business_settings:
+        # Create default settings if none exist
+        business_settings = BusinessSettings(
+            business_name='Perniagaan Saya',
+            monthly_expense_limit=5000.0,
+            default_currency='RM'
+        )
+        db.session.add(business_settings)
+        db.session.commit()
+    
+    return render_template('settings.html', settings=business_settings)
+
+@app.route('/settings', methods=['POST'])
+def update_settings():
+    """Update business settings"""
+    try:
+        business_settings = BusinessSettings.query.first()
+        if not business_settings:
+            business_settings = BusinessSettings()
+            db.session.add(business_settings)
+        
+        business_settings.business_name = request.form.get('business_name')
+        business_settings.monthly_expense_limit = float(request.form.get('monthly_expense_limit', 5000))
+        business_settings.default_currency = request.form.get('default_currency', 'RM')
+        business_settings.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        flash('Tetapan berjaya dikemaskini!', 'success')
+        
+    except Exception as e:
+        flash(f'Ralat: {str(e)}', 'error')
+    
+    return redirect(url_for('settings'))

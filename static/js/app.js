@@ -22,6 +22,15 @@ function initializeApp() {
     
     // Initialize tooltips and popovers
     initializeTooltips();
+    
+    // Initialize Floating Action Button
+    initializeFAB();
+    
+    // Initialize Pull-to-refresh
+    initializePullToRefresh();
+    
+    // Initialize expense alerts
+    checkExpenseLimits();
 }
 
 function setDefaultDates() {
@@ -266,6 +275,211 @@ function throttle(func, limit) {
     }
 }
 
+// Floating Action Button Functions
+function initializeFAB() {
+    const fab = document.getElementById('quickAddFAB');
+    const menu = document.getElementById('quickActionsMenu');
+    const fabIcon = document.getElementById('fabIcon');
+    let isMenuOpen = false;
+
+    if (!fab || !menu || !fabIcon) return;
+
+    fab.addEventListener('click', function() {
+        isMenuOpen = !isMenuOpen;
+        
+        if (isMenuOpen) {
+            // Show menu
+            menu.classList.remove('hidden');
+            fabIcon.style.transform = 'rotate(45deg)';
+            
+            // Animate quick action buttons
+            const buttons = menu.querySelectorAll('[data-quick-action]');
+            buttons.forEach((button, index) => {
+                setTimeout(() => {
+                    button.style.opacity = '1';
+                    button.style.transform = 'translateY(0)';
+                }, index * 50);
+            });
+        } else {
+            // Hide menu
+            fabIcon.style.transform = 'rotate(0deg)';
+            
+            // Animate out quick action buttons
+            const buttons = menu.querySelectorAll('[data-quick-action]');
+            buttons.forEach((button, index) => {
+                setTimeout(() => {
+                    button.style.opacity = '0';
+                    button.style.transform = 'translateY(16px)';
+                }, index * 30);
+            });
+            
+            // Hide menu after animation
+            setTimeout(() => {
+                menu.classList.add('hidden');
+            }, buttons.length * 30 + 100);
+        }
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(event) {
+        if (isMenuOpen && !fab.contains(event.target) && !menu.contains(event.target)) {
+            fab.click(); // Trigger close animation
+        }
+    });
+}
+
+// Pull to Refresh functionality
+function initializePullToRefresh() {
+    let startY = 0;
+    let currentY = 0;
+    let isPulling = false;
+    let refreshTriggered = false;
+    const threshold = 80;
+
+    const pullIndicator = createPullIndicator();
+
+    document.addEventListener('touchstart', function(e) {
+        if (window.scrollY === 0) {
+            startY = e.touches[0].clientY;
+            isPulling = true;
+        }
+    });
+
+    document.addEventListener('touchmove', function(e) {
+        if (!isPulling) return;
+
+        currentY = e.touches[0].clientY;
+        const pullDistance = currentY - startY;
+
+        if (pullDistance > 0 && pullDistance < 150) {
+            e.preventDefault();
+            const opacity = Math.min(pullDistance / threshold, 1);
+            const rotation = (pullDistance / threshold) * 360;
+            
+            pullIndicator.style.opacity = opacity;
+            pullIndicator.style.transform = `translateY(${pullDistance / 2}px) rotate(${rotation}deg)`;
+            
+            if (pullDistance > threshold && !refreshTriggered) {
+                refreshTriggered = true;
+                pullIndicator.style.color = '#10B981';
+            }
+        }
+    });
+
+    document.addEventListener('touchend', function() {
+        if (!isPulling) return;
+        
+        isPulling = false;
+        const pullDistance = currentY - startY;
+        
+        if (pullDistance > threshold && refreshTriggered) {
+            // Trigger refresh
+            pullIndicator.style.transform = 'translateY(20px) rotate(720deg)';
+            showNotification('Menyegar semula...', 'info');
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            // Reset indicator
+            pullIndicator.style.opacity = '0';
+            pullIndicator.style.transform = 'translateY(-20px)';
+        }
+        
+        refreshTriggered = false;
+        startY = 0;
+        currentY = 0;
+    });
+}
+
+function createPullIndicator() {
+    const indicator = document.createElement('div');
+    indicator.innerHTML = '<i data-feather="refresh-cw"></i>';
+    indicator.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 text-gray-600 opacity-0 transition-all duration-300 z-50';
+    indicator.style.transform = 'translateX(-50%) translateY(-20px)';
+    document.body.appendChild(indicator);
+    
+    // Replace feather icon
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+    
+    return indicator;
+}
+
+// Expense Limit Alerts
+function checkExpenseLimits() {
+    // Get today's expenses from dashboard data
+    const expensesElement = document.querySelector('[data-today-expenses]');
+    if (!expensesElement) return;
+    
+    const todayExpenses = parseFloat(expensesElement.textContent.replace('RM', '').replace(',', '')) || 0;
+    const monthlyLimit = 5000; // Get from settings in future
+    const dailyLimit = monthlyLimit / 30;
+    
+    // Check daily limit (80% warning, 100% danger)
+    if (todayExpenses >= dailyLimit) {
+        showNotification('⚠️ Had perbelanjaan harian telah dicapai!', 'error');
+    } else if (todayExpenses >= dailyLimit * 0.8) {
+        showNotification('🔶 80% had perbelanjaan harian telah dicapai', 'warning');
+    }
+}
+
+// Dark Mode Toggle
+function toggleDarkMode() {
+    const body = document.body;
+    const isDark = body.classList.contains('dark');
+    
+    if (isDark) {
+        body.classList.remove('dark');
+        localStorage.setItem('darkMode', 'false');
+    } else {
+        body.classList.add('dark');
+        localStorage.setItem('darkMode', 'true');
+    }
+}
+
+function initializeDarkMode() {
+    const savedMode = localStorage.getItem('darkMode');
+    if (savedMode === 'true') {
+        document.body.classList.add('dark');
+    }
+}
+
+// Enhanced Chart Functions
+function createMiniChart(canvasId, data, type = 'line') {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    canvas.width = 100;
+    canvas.height = 40;
+    
+    // Simple line chart implementation
+    if (type === 'line' && data.length > 1) {
+        const max = Math.max(...data);
+        const min = Math.min(...data);
+        const range = max - min || 1;
+        
+        ctx.strokeStyle = '#10B981';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        
+        data.forEach((value, index) => {
+            const x = (index / (data.length - 1)) * canvas.width;
+            const y = canvas.height - ((value - min) / range) * canvas.height;
+            
+            if (index === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        });
+        
+        ctx.stroke();
+    }
+}
+
 // Export for use in other scripts
 window.App = {
     formatCurrency,
@@ -281,5 +495,7 @@ window.App = {
     checkNetworkStatus,
     quickAddTransaction,
     debounce,
-    throttle
+    throttle,
+    toggleDarkMode,
+    createMiniChart
 };
