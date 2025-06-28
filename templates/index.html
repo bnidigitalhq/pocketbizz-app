@@ -98,6 +98,16 @@
                 <i data-feather="bar-chart-2" class="w-6 h-6 text-warning-yellow mb-2 nav-icon"></i>
                 <span class="text-sm font-medium text-warning-yellow">Laporan</span>
             </a>
+            
+            <a href="{{ url_for('export_pdf') }}" class="premium-button ripple flex flex-col items-center p-4 bg-red-500 bg-opacity-10 rounded-xl hover:bg-opacity-20 transition-all duration-300">
+                <i data-feather="file-text" class="w-6 h-6 text-red-500 mb-2 nav-icon"></i>
+                <span class="text-sm font-medium text-red-500">Export PDF</span>
+            </a>
+            
+            <a href="{{ url_for('print_report') }}" target="_blank" class="premium-button ripple flex flex-col items-center p-4 bg-blue-500 bg-opacity-10 rounded-xl hover:bg-opacity-20 transition-all duration-300">
+                <i data-feather="printer" class="w-6 h-6 text-blue-500 mb-2 nav-icon"></i>
+                <span class="text-sm font-medium text-blue-500">Print</span>
+            </a>
         </div>
     </div>
 

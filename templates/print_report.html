@@ -260,7 +260,7 @@
 
     <!-- Footer -->
     <div class="footer">
-        <p>Laporan dijana pada: {{ datetime.now().strftime('%d/%m/%Y %H:%M') }}</p>
+        <p id="generated-time">Laporan dijana pada: --</p>
         <p>{{ settings.business_name if settings else 'Perniagaan Saya' }} - Sistem Perakaunan SME</p>
     </div>
 

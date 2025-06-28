@@ -244,7 +244,9 @@ def reports():
                          monthly_profit=monthly_profit,
                          channel_income=channel_income,
                          expense_categories=expense_categories,
-                         current_month=now.strftime('%B %Y'))
+                         current_month=now.strftime('%B %Y'),
+                         current_month_num=now.month,
+                         current_year=now.year)
 
 @app.route('/export_csv')
 def export_csv():
