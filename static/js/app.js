@@ -278,54 +278,9 @@ function throttle(func, limit) {
     }
 }
 
-// Floating Action Button Functions
+// Center FAB Functions only
 function initializeFAB() {
-    // Initialize side floating FAB
-    const fab = document.getElementById('quickAddFAB');
-    const menu = document.getElementById('quickActionsMenu');
-    const fabIcon = document.getElementById('fabIcon');
-    let isMenuOpen = false;
-
-    if (fab && menu && fabIcon) {
-        fab.addEventListener('click', function() {
-            isMenuOpen = !isMenuOpen;
-            
-            if (isMenuOpen) {
-                menu.classList.remove('hidden');
-                fabIcon.style.transform = 'rotate(45deg)';
-                
-                const buttons = menu.querySelectorAll('[data-quick-action]');
-                buttons.forEach((button, index) => {
-                    setTimeout(() => {
-                        button.style.opacity = '1';
-                        button.style.transform = 'translateY(0)';
-                    }, index * 50);
-                });
-            } else {
-                fabIcon.style.transform = 'rotate(0deg)';
-                
-                const buttons = menu.querySelectorAll('[data-quick-action]');
-                buttons.forEach((button, index) => {
-                    setTimeout(() => {
-                        button.style.opacity = '0';
-                        button.style.transform = 'translateY(16px)';
-                    }, index * 30);
-                });
-                
-                setTimeout(() => {
-                    menu.classList.add('hidden');
-                }, buttons.length * 30 + 100);
-            }
-        });
-
-        document.addEventListener('click', function(event) {
-            if (isMenuOpen && !fab.contains(event.target) && !menu.contains(event.target)) {
-                fab.click();
-            }
-        });
-    }
-    
-    // Initialize center FAB
+    // Initialize center FAB only
     initializeCenterFAB();
 }
 
@@ -476,7 +431,7 @@ function initializePullToRefresh() {
         if (pullDistance > threshold && refreshTriggered) {
             // Trigger refresh
             pullIndicator.style.transform = 'translateY(20px) rotate(720deg)';
-            showNotification('Menyegar semula...', 'info');
+            showNotification('Refreshing...', 'info');
             
             setTimeout(() => {
                 window.location.reload();
