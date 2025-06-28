@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from flask import render_template, request, redirect, url_for, flash, jsonify, make_response
 from werkzeug.utils import secure_filename
 from app import app, db
-from models import Transaction, BusinessSettings
+from models import Transaction, BusinessSettings, Product, StockMovement, Agent, AgentOrder, ZakatCalculation
 
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'csv', 'png', 'jpg', 'jpeg', 'gif'}
@@ -334,3 +334,403 @@ def update_settings():
         flash(f'Ralat: {str(e)}', 'error')
     
     return redirect(url_for('settings'))
+
+# === INVENTORY MANAGEMENT ROUTES ===
+
+@app.route('/inventory')
+def inventory():
+    """Inventory management page"""
+    products = Product.query.filter_by(is_active=True).all()
+    low_stock_products = [p for p in products if p.is_low_stock]
+    
+    # Stock summary statistics
+    total_products = len(products)
+    total_stock_value = sum(p.current_stock * p.cost_price for p in products)
+    
+    return render_template('inventory.html', 
+                         products=products,
+                         low_stock_products=low_stock_products,
+                         total_products=total_products,
+                         total_stock_value=total_stock_value)
+
+@app.route('/add_product', methods=['GET', 'POST'])
+def add_product():
+    """Add new product"""
+    if request.method == 'POST':
+        try:
+            product = Product(
+                name=request.form['name'],
+                sku=request.form.get('sku'),
+                description=request.form.get('description'),
+                cost_price=float(request.form.get('cost_price', 0)),
+                selling_price=float(request.form.get('selling_price', 0)),
+                current_stock=int(request.form.get('current_stock', 0)),
+                minimum_stock=int(request.form.get('minimum_stock', 10)),
+                category=request.form.get('category'),
+                supplier=request.form.get('supplier')
+            )
+            
+            db.session.add(product)
+            db.session.commit()
+            
+            # Add initial stock movement if stock > 0
+            if product.current_stock > 0:
+                stock_movement = StockMovement(
+                    product_id=product.id,
+                    movement_type='in',
+                    quantity=product.current_stock,
+                    reference_type='initial_stock',
+                    notes='Stok awal produk'
+                )
+                db.session.add(stock_movement)
+                db.session.commit()
+            
+            flash('Produk berjaya ditambah!', 'success')
+            return redirect(url_for('inventory'))
+            
+        except Exception as e:
+            flash(f'Ralat: {str(e)}', 'error')
+    
+    return render_template('add_product.html')
+
+@app.route('/stock_movement/<int:product_id>', methods=['POST'])
+def stock_movement(product_id):
+    """Record stock movement"""
+    try:
+        product = Product.query.get_or_404(product_id)
+        movement_type = request.form['movement_type']  # 'in' or 'out'
+        quantity = int(request.form['quantity'])
+        notes = request.form.get('notes', '')
+        
+        # Update product stock
+        if movement_type == 'in':
+            product.current_stock += quantity
+        elif movement_type == 'out':
+            if product.current_stock >= quantity:
+                product.current_stock -= quantity
+            else:
+                flash('Stok tidak mencukupi!', 'error')
+                return redirect(url_for('inventory'))
+        
+        # Record movement
+        movement = StockMovement(
+            product_id=product_id,
+            movement_type=movement_type,
+            quantity=quantity,
+            reference_type='manual_adjustment',
+            notes=notes
+        )
+        
+        db.session.add(movement)
+        db.session.commit()
+        
+        flash('Pergerakan stok berjaya direkodkan!', 'success')
+        
+    except Exception as e:
+        flash(f'Ralat: {str(e)}', 'error')
+    
+    return redirect(url_for('inventory'))
+
+# === AGENT MANAGEMENT ROUTES ===
+
+@app.route('/agents')
+def agents():
+    """Agent management page"""
+    agents = Agent.query.all()
+    pending_orders = AgentOrder.query.filter_by(status='pending').count()
+    
+    return render_template('agents.html', 
+                         agents=agents,
+                         pending_orders=pending_orders)
+
+@app.route('/add_agent', methods=['GET', 'POST'])
+def add_agent():
+    """Add new agent"""
+    if request.method == 'POST':
+        try:
+            agent = Agent(
+                name=request.form['name'],
+                phone=request.form.get('phone'),
+                email=request.form.get('email'),
+                address=request.form.get('address'),
+                commission_rate=float(request.form.get('commission_rate', 10))
+            )
+            
+            db.session.add(agent)
+            db.session.commit()
+            
+            flash('Ejen berjaya ditambah!', 'success')
+            return redirect(url_for('agents'))
+            
+        except Exception as e:
+            flash(f'Ralat: {str(e)}', 'error')
+    
+    return render_template('add_agent.html')
+
+@app.route('/agent_orders')
+def agent_orders():
+    """Agent orders management"""
+    status_filter = request.args.get('status', 'all')
+    
+    if status_filter == 'all':
+        orders = AgentOrder.query.order_by(AgentOrder.order_date.desc()).all()
+    else:
+        orders = AgentOrder.query.filter_by(status=status_filter).order_by(AgentOrder.order_date.desc()).all()
+    
+    return render_template('agent_orders.html', 
+                         orders=orders,
+                         current_status=status_filter)
+
+@app.route('/submit_agent_order', methods=['GET', 'POST'])
+def submit_agent_order():
+    """Agent submit new order"""
+    if request.method == 'POST':
+        try:
+            # Generate order number
+            order_count = AgentOrder.query.count() + 1
+            order_number = f"ORD{datetime.now().strftime('%Y%m%d')}{order_count:04d}"
+            
+            agent_order = AgentOrder(
+                agent_id=int(request.form['agent_id']),
+                order_number=order_number,
+                customer_name=request.form['customer_name'],
+                customer_phone=request.form.get('customer_phone'),
+                total_amount=float(request.form['total_amount']),
+                payment_method=request.form['payment_method'],
+                notes=request.form.get('notes')
+            )
+            
+            # Calculate commission
+            agent = Agent.query.get(agent_order.agent_id)
+            if agent:
+                agent_order.commission_amount = (agent_order.total_amount * agent.commission_rate) / 100
+            
+            # Handle payment proof upload
+            if 'payment_proof' in request.files:
+                file = request.files['payment_proof']
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    filepath = os.path.join(UPLOAD_FOLDER, filename)
+                    file.save(filepath)
+                    agent_order.payment_proof = filepath
+            
+            db.session.add(agent_order)
+            db.session.commit()
+            
+            flash('Order berjaya dihantar untuk semakan!', 'success')
+            return redirect(url_for('agent_orders'))
+            
+        except Exception as e:
+            flash(f'Ralat: {str(e)}', 'error')
+    
+    agents = Agent.query.filter_by(status='active').all()
+    return render_template('submit_agent_order.html', agents=agents)
+
+@app.route('/approve_order/<int:order_id>')
+def approve_order(order_id):
+    """Approve agent order"""
+    try:
+        order = AgentOrder.query.get_or_404(order_id)
+        order.status = 'approved'
+        order.approved_at = datetime.utcnow()
+        order.approved_by = 'Admin'  # In real app, get from session
+        
+        # Update agent totals
+        agent = order.agent
+        agent.total_sales += order.total_amount
+        agent.total_commission += order.commission_amount
+        
+        # Create transaction record
+        transaction = Transaction(
+            type='income',
+            amount=order.total_amount,
+            description=f'Order dari {agent.name} - {order.customer_name}',
+            channel='agent',
+            category='agent_sales',
+            date=order.order_date
+        )
+        
+        db.session.add(transaction)
+        db.session.commit()
+        
+        flash('Order berjaya diluluskan!', 'success')
+        
+    except Exception as e:
+        flash(f'Ralat: {str(e)}', 'error')
+    
+    return redirect(url_for('agent_orders'))
+
+@app.route('/reject_order/<int:order_id>')
+def reject_order(order_id):
+    """Reject agent order"""
+    try:
+        order = AgentOrder.query.get_or_404(order_id)
+        order.status = 'rejected'
+        order.approved_at = datetime.utcnow()
+        order.approved_by = 'Admin'
+        
+        db.session.commit()
+        flash('Order telah ditolak!', 'info')
+        
+    except Exception as e:
+        flash(f'Ralat: {str(e)}', 'error')
+    
+    return redirect(url_for('agent_orders'))
+
+# === ZAKAT CALCULATION ROUTES ===
+
+@app.route('/zakat')
+def zakat():
+    """Zakat calculation page"""
+    current_year = datetime.now().year
+    
+    # Get existing calculation for current year
+    existing_calc = ZakatCalculation.query.filter_by(year=current_year).first()
+    
+    # Calculate current year data if no existing calculation
+    if not existing_calc:
+        # Get transactions for current year
+        year_start = datetime(current_year, 1, 1)
+        year_end = datetime(current_year, 12, 31)
+        
+        year_transactions = Transaction.query.filter(
+            Transaction.date >= year_start,
+            Transaction.date <= year_end
+        ).all()
+        
+        total_income = sum(t.amount for t in year_transactions if t.type == 'income')
+        total_expenses = sum(t.amount for t in year_transactions if t.type == 'expense')
+        net_profit = total_income - total_expenses
+        
+        # Calculate current stock value
+        products = Product.query.filter_by(is_active=True).all()
+        stock_value = sum(p.current_stock * p.cost_price for p in products)
+        
+        # Create preliminary calculation
+        prelim_calc = {
+            'year': current_year,
+            'total_income': total_income,
+            'total_expenses': total_expenses,
+            'net_profit': net_profit,
+            'stock_value': stock_value,
+            'receivables': 0.0,  # User input required
+            'liabilities': 0.0,  # User input required
+        }
+        
+        # Calculate zakat
+        zakatable_amount = max(0, net_profit + stock_value + prelim_calc['receivables'] - prelim_calc['liabilities'])
+        zakat_amount = zakatable_amount * 0.025  # 2.5%
+        
+        prelim_calc['zakatable_amount'] = zakatable_amount
+        prelim_calc['zakat_amount'] = zakat_amount
+        
+    else:
+        prelim_calc = existing_calc.to_dict()
+    
+    # Get historical calculations
+    history = ZakatCalculation.query.order_by(ZakatCalculation.year.desc()).all()
+    
+    return render_template('zakat.html', 
+                         calculation=prelim_calc,
+                         history=history,
+                         current_year=current_year)
+
+@app.route('/save_zakat_calculation', methods=['POST'])
+def save_zakat_calculation():
+    """Save zakat calculation"""
+    try:
+        year = int(request.form['year'])
+        
+        # Check if calculation already exists
+        existing = ZakatCalculation.query.filter_by(year=year).first()
+        
+        if existing:
+            calc = existing
+        else:
+            calc = ZakatCalculation(year=year)
+        
+        calc.total_income = float(request.form['total_income'])
+        calc.total_expenses = float(request.form['total_expenses'])
+        calc.net_profit = float(request.form['net_profit'])
+        calc.stock_value = float(request.form['stock_value'])
+        calc.receivables = float(request.form.get('receivables', 0))
+        calc.liabilities = float(request.form.get('liabilities', 0))
+        calc.notes = request.form.get('notes', '')
+        
+        # Calculate zakatable amount and zakat
+        calc.zakatable_amount = max(0, calc.net_profit + calc.stock_value + calc.receivables - calc.liabilities)
+        calc.zakat_amount = calc.zakatable_amount * (calc.zakat_rate / 100)
+        
+        if not existing:
+            db.session.add(calc)
+        
+        db.session.commit()
+        
+        flash('Pengiraan zakat berjaya disimpan!', 'success')
+        
+    except Exception as e:
+        flash(f'Ralat: {str(e)}', 'error')
+    
+    return redirect(url_for('zakat'))
+
+@app.route('/mark_zakat_paid/<int:calc_id>')
+def mark_zakat_paid(calc_id):
+    """Mark zakat as paid"""
+    try:
+        calc = ZakatCalculation.query.get_or_404(calc_id)
+        calc.is_paid = True
+        calc.paid_date = datetime.utcnow()
+        
+        db.session.commit()
+        flash('Zakat ditandakan sebagai telah dibayar!', 'success')
+        
+    except Exception as e:
+        flash(f'Ralat: {str(e)}', 'error')
+    
+    return redirect(url_for('zakat'))
+
+# === API ENDPOINTS FOR NEW FEATURES ===
+
+@app.route('/api/low_stock_alerts')
+def api_low_stock_alerts():
+    """API to get low stock alerts"""
+    products = Product.query.filter_by(is_active=True).all()
+    low_stock = [p.to_dict() for p in products if p.is_low_stock]
+    
+    return jsonify({
+        'alerts': low_stock,
+        'count': len(low_stock)
+    })
+
+@app.route('/api/agent_stats/<int:agent_id>')
+def api_agent_stats(agent_id):
+    """API to get agent statistics"""
+    agent = Agent.query.get_or_404(agent_id)
+    
+    # Get monthly sales for current year
+    current_year = datetime.now().year
+    monthly_sales = []
+    
+    for month in range(1, 13):
+        month_start = datetime(current_year, month, 1)
+        if month == 12:
+            month_end = datetime(current_year + 1, 1, 1)
+        else:
+            month_end = datetime(current_year, month + 1, 1)
+        
+        month_orders = AgentOrder.query.filter(
+            AgentOrder.agent_id == agent_id,
+            AgentOrder.status == 'approved',
+            AgentOrder.order_date >= month_start,
+            AgentOrder.order_date < month_end
+        ).all()
+        
+        total = sum(order.total_amount for order in month_orders)
+        monthly_sales.append(total)
+    
+    return jsonify({
+        'agent': agent.to_dict(),
+        'monthly_sales': monthly_sales,
+        'months': ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 
+                  'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dis']
+    })
