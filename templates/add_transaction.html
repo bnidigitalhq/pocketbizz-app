@@ -46,15 +46,26 @@
             </div>
         </div>
 
-        <!-- Description -->
+        <!-- Description with Voice Input -->
         <div class="bg-white rounded-lg shadow-md p-4">
             <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Keterangan</label>
-            <input type="text" 
-                   name="description" 
-                   id="description" 
-                   placeholder="Contoh: Jualan produk, Belanja iklan"
-                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent"
-                   required>
+            <div class="relative">
+                <input type="text" 
+                       name="description" 
+                       id="description" 
+                       placeholder="Contoh: Jualan produk, Belanja iklan"
+                       class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent"
+                       required>
+                <button type="button" 
+                        id="voiceInputBtn" 
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-primary transition-colors"
+                        title="Tekan untuk rekod suara">
+                    <i data-feather="mic" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="voiceStatus" class="mt-2 text-sm text-gray-500 hidden">
+                <span id="voiceStatusText">Tekan butang mikrofon untuk mula merekod...</span>
+            </div>
         </div>
 
         <!-- Channel -->
