@@ -1,0 +1,48 @@
+Bina satu mobile-first accounting app khas untuk pemilik bisnes SME Malaysia yang sibuk dan selalu bergerak.
+
+Konsep utama: “On-The-Go Accounting” – sistem akaun mudah guna di telefon, direka untuk founder yang aktif berniaga secara online (Shopee, TikTok Shop, ejen, walk-in) dan tidak sempat buka laptop.
+
+🎯 Objektif App:
+- Bantu peniaga rekod jualan & belanja harian dalam masa < 10 saat
+- Semua boleh dibuat dari phone
+- UI/UX mesti familiar seperti Shopee Seller Center & TikTok Shop
+
+🧩 Struktur App:
+1. `index.html` – Dashboard utama
+2. `navbar.html` – Bottom nav bar (macam Shopee)
+3. `add_transaction.html` – Tambah Jualan / Belanja
+4. `scan_receipt.html` – OCR scan guna Tesseract.js
+5. `report.html` – Laporan bulanan & CSV export
+6. `main.py` – Flask backend (simpanan data)
+7. `database.py` – Supabase integration (atau SQLite untuk MVP)
+8. `style.css` – Tailwind CSS (mobile responsive)
+
+📱 Fungsi MVP:
+1. Login dengan email (guna Supabase Auth)
+2. Dashboard ringkas: jualan, belanja, untung hari ini
+3. Tambah transaksi manual (pilih jenis + channel: Shopee, TikTok, Walk-in, Ejen)
+4. Imbas resit/invois guna Tesseract.js → autofill tarikh & jumlah
+5. Upload CSV Shopee/TikTok → auto masukkan transaksi
+6. Papar laporan bulanan & eksport CSV
+7. UI ala Shopee: navbar bawah, kad, layout bersih
+8. Reminder & tasks simple (contoh: “Dah update jualan hari ni?”)
+
+📦 Ciri Tambahan (optional untuk next phase):
+- Offline mode: simpan local, sync bila online
+- Quick Add Button tengah (macam TikTok "+")
+- Smart Alert: bila belanja cecah limit
+- Daily Profit Notification
+
+🎨 Design Style:
+- Font: Inter atau Poppins
+- Warna utama: Putih + biru atau oren accent
+- Guna card-style UI seperti Shopee Seller Center
+- Responsive untuk paparan telefon & tablet
+
+🎁 Tujuan App:
+Bantu peniaga yang sibuk, selalu on the move, tak sempat buka laptop, tapi nak tahu:
+- Hari ni untung berapa?
+- Belanja apa paling banyak?
+- Channel mana paling perform?
+
+Bina app ni dalam struktur yang kemas, modular, dan sedia untuk scale.
