@@ -86,35 +86,36 @@
     </div>
 
     <!-- Bottom Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 shadow-2xl">
-        <div class="flex items-center justify-around py-2 px-2">
-            <!-- Dashboard -->
-            <a href="{{ url_for('index') }}" class="nav-item flex flex-col items-center p-3 transition-all duration-300 hover:scale-105 ripple {% if request.endpoint == 'index' %}text-shopee-orange{% else %}text-gray-600 hover:text-shopee-orange{% endif %}">
-                <div class="relative">
-                    <i data-feather="home" class="w-6 h-6 nav-icon transition-transform duration-300"></i>
-                    {% if request.endpoint == 'index' %}
-                    <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-shopee-orange rounded-full animate-pulse"></div>
-                    {% endif %}
-                </div>
-                <span class="text-xs mt-1 font-medium">Utama</span>
-            </a>
-            
-            <!-- Reports -->
-            <a href="{{ url_for('reports') }}" class="nav-item flex flex-col items-center p-3 transition-all duration-300 hover:scale-105 ripple {% if request.endpoint == 'reports' %}text-shopee-orange{% else %}text-gray-600 hover:text-shopee-orange{% endif %}">
-                <div class="relative">
-                    <i data-feather="bar-chart-2" class="w-6 h-6 nav-icon transition-transform duration-300"></i>
-                    {% if request.endpoint == 'reports' %}
-                    <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-shopee-orange rounded-full animate-pulse"></div>
-                    {% endif %}
-                </div>
-                <span class="text-xs mt-1 font-medium">Laporan</span>
-            </a>
-            
-            <!-- Center FAB -->
-            <div class="relative">
-                <button id="centerFAB" class="animated-gradient text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-xl active:scale-95 premium-button">
-                    <i data-feather="plus" class="w-7 h-7 transition-transform duration-300" id="centerFabIcon"></i>
-                </button>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 shadow-2xl bottom-nav">
+        <div class="nav-container">
+            <div class="nav-grid">
+                <!-- Dashboard -->
+                <a href="{{ url_for('index') }}" class="nav-item flex flex-col items-center p-2 transition-all duration-300 hover:scale-105 ripple {% if request.endpoint == 'index' %}text-shopee-orange{% else %}text-gray-600 hover:text-shopee-orange{% endif %}">
+                    <div class="relative">
+                        <i data-feather="home" class="w-6 h-6 nav-icon transition-transform duration-300"></i>
+                        {% if request.endpoint == 'index' %}
+                        <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-shopee-orange rounded-full animate-pulse"></div>
+                        {% endif %}
+                    </div>
+                    <span class="text-xs mt-1 font-medium">Utama</span>
+                </a>
+                
+                <!-- Reports -->
+                <a href="{{ url_for('reports') }}" class="nav-item flex flex-col items-center p-2 transition-all duration-300 hover:scale-105 ripple {% if request.endpoint == 'reports' %}text-shopee-orange{% else %}text-gray-600 hover:text-shopee-orange{% endif %}">
+                    <div class="relative">
+                        <i data-feather="bar-chart-2" class="w-6 h-6 nav-icon transition-transform duration-300"></i>
+                        {% if request.endpoint == 'reports' %}
+                        <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-shopee-orange rounded-full animate-pulse"></div>
+                        {% endif %}
+                    </div>
+                    <span class="text-xs mt-1 font-medium">Laporan</span>
+                </a>
+                
+                <!-- Center FAB -->
+                <div class="relative mx-2">
+                    <button id="centerFAB" class="animated-gradient text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-xl active:scale-95 premium-button">
+                        <i data-feather="plus" class="w-7 h-7 transition-transform duration-300" id="centerFabIcon"></i>
+                    </button>
                 
                 <!-- Center FAB Menu -->
                 <div id="centerFabMenu" class="absolute bottom-16 left-1/2 transform -translate-x-1/2 hidden">
@@ -143,27 +144,27 @@
                 </div>
             </div>
             
-            <!-- Scan Receipt -->
-            <a href="{{ url_for('scan_receipt') }}" class="nav-item flex flex-col items-center p-3 transition-all duration-300 hover:scale-105 ripple {% if request.endpoint == 'scan_receipt' %}text-shopee-orange{% else %}text-gray-600 hover:text-shopee-orange{% endif %}">
-                <div class="relative">
-                    <i data-feather="camera" class="w-6 h-6 nav-icon transition-transform duration-300"></i>
-                    {% if request.endpoint == 'scan_receipt' %}
-                    <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-shopee-orange rounded-full animate-pulse"></div>
-                    {% endif %}
-                </div>
-                <span class="text-xs mt-1 font-medium">Imbas</span>
-            </a>
-            
-            <!-- More/Settings -->
-            <a href="{{ url_for('settings') }}" class="nav-item flex flex-col items-center p-3 transition-all duration-300 hover:scale-105 ripple {% if request.endpoint == 'settings' %}text-shopee-orange{% else %}text-gray-600 hover:text-shopee-orange{% endif %}">
-                <div class="relative">
-                    <i data-feather="more-horizontal" class="w-6 h-6 nav-icon transition-transform duration-300"></i>
-                    {% if request.endpoint == 'settings' %}
-                    <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-shopee-orange rounded-full animate-pulse"></div>
-                    {% endif %}
-                </div>
-                <span class="text-xs mt-1 font-medium">Lagi</span>
-            </a>
+                <!-- Scan Receipt -->
+                <a href="{{ url_for('scan_receipt') }}" class="nav-item flex flex-col items-center p-2 transition-all duration-300 hover:scale-105 ripple {% if request.endpoint == 'scan_receipt' %}text-shopee-orange{% else %}text-gray-600 hover:text-shopee-orange{% endif %}">
+                    <div class="relative">
+                        <i data-feather="camera" class="w-6 h-6 nav-icon transition-transform duration-300"></i>
+                        {% if request.endpoint == 'scan_receipt' %}
+                        <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-shopee-orange rounded-full animate-pulse"></div>
+                        {% endif %}
+                    </div>
+                    <span class="text-xs mt-1 font-medium">Imbas</span>
+                </a>
+                
+                <!-- More/Settings -->
+                <a href="{{ url_for('settings') }}" class="nav-item flex flex-col items-center p-2 transition-all duration-300 hover:scale-105 ripple {% if request.endpoint == 'settings' %}text-shopee-orange{% else %}text-gray-600 hover:text-shopee-orange{% endif %}">
+                    <div class="relative">
+                        <i data-feather="more-horizontal" class="w-6 h-6 nav-icon transition-transform duration-300"></i>
+                        {% if request.endpoint == 'settings' %}
+                        <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-shopee-orange rounded-full animate-pulse"></div>
+                        {% endif %}
+                    </div>
+                    <span class="text-xs mt-1 font-medium">Lagi</span>
+                </a>
         </div>
     </nav>
 

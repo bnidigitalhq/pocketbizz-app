@@ -102,9 +102,39 @@ body {
     100% { background-position: 0% 50%; }
 }
 
+/* Navigation fixed layout */
+.bottom-nav {
+    height: 70px;
+    min-height: 70px;
+}
+
+.nav-container {
+    max-width: 375px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+.nav-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 80px 1fr 1fr;
+    align-items: center;
+    justify-items: center;
+    gap: 8px;
+    height: 100%;
+}
+
 /* Navigation active state */
 .nav-item.active {
     color: #EE4D2D !important;
+}
+
+.nav-item {
+    min-width: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px;
 }
 
 /* Card hover effects */
