@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PocketBizz - Sistem Perakaunan Mudah untuk SME Malaysia</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Sistem perakaunan mobile-first untuk SME Malaysia. Rekod jualan & perbelanjaan dalam 10 saat. Support Shopee, TikTok Shop, scan resit AI, dan laporan zakat.">
+    <meta name="keywords" content="perakaunan, SME, Malaysia, mobile accounting, Shopee, TikTok Shop, zakat calculator">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#EE4D2D',
+                        'secondary': '#1976D2',
+                        'success': '#10B981',
+                        'warning': '#F59E0B',
+                        'error': '#EF4444',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom CSS for animations -->
+    <style>
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #EE4D2D, #1976D2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 via-white to-blue-50 font-inter">
+    
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-effect border-b border-white/20">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-xl flex items-center justify-center">
+                        <i data-feather="smartphone" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold gradient-text">PocketBizz</h1>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#features" class="text-gray-700 hover:text-primary transition-colors">Features</a>
+                    <a href="#pricing" class="text-gray-700 hover:text-primary transition-colors">Harga</a>
+                    <a href="#testimonials" class="text-gray-700 hover:text-primary transition-colors">Testimoni</a>
+                </div>
+                <a href="{{ url_for('index') }}" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors font-semibold">
+                    Cuba Percuma
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section - ATTENTION -->
+    <section class="pt-24 pb-16 px-4">
+        <div class="container mx-auto text-center max-w-6xl">
+            <div class="mb-8">
+                <span class="bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold">
+                    🚀 Dipercayai oleh 1000+ SME di Malaysia
+                </span>
+            </div>
+            
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+                Sistem Perakaunan <span class="gradient-text">On-The-Go</span><br>
+                untuk SME Malaysia
+            </h1>
+            
+            <p class="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
+                Rekod jualan & perbelanjaan dalam <strong>10 saat</strong> dari telefon. 
+                Support Shopee, TikTok Shop, scan resit AI, dan auto-calculate zakat.
+            </p>
+            
+            <div class="flex flex-col md:flex-row gap-4 justify-center mb-12">
+                <a href="{{ url_for('index') }}" class="bg-primary text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-red-600 transition-all transform hover:scale-105 shadow-lg">
+                    🎯 Mula Guna Sekarang - PERCUMA
+                </a>
+                <a href="#demo" class="border-2 border-primary text-primary px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary hover:text-white transition-all">
+                    📱 Lihat Demo
+                </a>
+            </div>
+            
+            <!-- Screenshot Placeholder -->
+            <div class="relative max-w-4xl mx-auto">
+                <div class="bg-white rounded-2xl shadow-2xl p-4 float-animation">
+                    <div class="bg-gray-100 rounded-xl h-96 flex items-center justify-center">
+                        <div class="text-center">
+                            <i data-feather="smartphone" class="w-20 h-20 text-gray-400 mx-auto mb-4"></i>
+                            <p class="text-gray-500 text-lg">
+                                [Letak Screenshot Dashboard PocketBizz Di Sini]<br>
+                                <small>Mobile-first interface yang mudah digunakan</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section - INTEREST -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-12">
+                Masalah Yang Dihadapi SME Malaysia
+            </h2>
+            
+            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-feather="clock" class="w-8 h-8 text-red-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Masa Terbuang</h3>
+                    <p class="text-gray-600">
+                        Spend berjam-jam untuk key-in data dari pelbagai platform (Shopee, TikTok, walk-in customers)
+                    </p>
+                </div>
+                
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-feather="file-text" class="w-8 h-8 text-yellow-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Resit Hilang</h3>
+                    <p class="text-gray-600">
+                        Resit paper mudah hilang, susah nak trace balik expenses untuk tax atau zakat calculation
+                    </p>
+                </div>
+                
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-feather="trending-down" class="w-8 h-8 text-blue-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Tak Tahu Profit</h3>
+                    <p class="text-gray-600">
+                        Susah nak monitor real-time profit, cash flow, dan performance setiap sales channel
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section - DESIRE -->
+    <section id="features" class="py-16">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-6">
+                    Kenapa PocketBizz <span class="gradient-text">Berbeza</span>?
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Designed specifically untuk busy Malaysian SME owners yang always on-the-move
+                </p>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-12 items-center mb-16">
+                <div>
+                    <h3 class="text-2xl md:text-3xl font-bold mb-6">
+                        ⚡ Record Transaction dalam 10 Saat
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start space-x-3">
+                            <i data-feather="check-circle" class="w-6 h-6 text-success mt-1"></i>
+                            <span class="text-lg">Floating action button macam TikTok - tap & go</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i data-feather="check-circle" class="w-6 h-6 text-success mt-1"></i>
+                            <span class="text-lg">Pre-filled forms untuk Shopee, TikTok, Walk-in, Agent</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i data-feather="check-circle" class="w-6 h-6 text-success mt-1"></i>
+                            <span class="text-lg">Smart categories yang auto-suggest</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="bg-gray-100 rounded-xl h-80 flex items-center justify-center">
+                    <div class="text-center">
+                        <i data-feather="zap" class="w-16 h-16 text-primary mx-auto mb-4"></i>
+                        <p class="text-gray-500">[Screenshot: Quick Add Transaction]</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-12 items-center mb-16">
+                <div class="bg-gray-100 rounded-xl h-80 flex items-center justify-center order-2 lg:order-1">
+                    <div class="text-center">
+                        <i data-feather="camera" class="w-16 h-16 text-primary mx-auto mb-4"></i>
+                        <p class="text-gray-500">[Screenshot: AI Receipt Scanner]</p>
+                    </div>
+                </div>
+                <div class="order-1 lg:order-2">
+                    <h3 class="text-2xl md:text-3xl font-bold mb-6">
+                        🤖 AI Receipt Scanner (Macam CamScanner)
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start space-x-3">
+                            <i data-feather="check-circle" class="w-6 h-6 text-success mt-1"></i>
+                            <span class="text-lg">Auto-detect borders & crop receipt perfectly</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i data-feather="check-circle" class="w-6 h-6 text-success mt-1"></i>
+                            <span class="text-lg">Extract amount, date, vendor name automatically</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i data-feather="check-circle" class="w-6 h-6 text-success mt-1"></i>
+                            <span class="text-lg">Save as PDF - no more lost receipts!</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-12 items-center mb-16">
+                <div>
+                    <h3 class="text-2xl md:text-3xl font-bold mb-6">
+                        📊 Multi-Platform Import & Analytics
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start space-x-3">
+                            <i data-feather="check-circle" class="w-6 h-6 text-success mt-1"></i>
+                            <span class="text-lg">Auto-import CSV dari Shopee, TikTok Shop, Lazada</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i data-feather="check-circle" class="w-6 h-6 text-success mt-1"></i>
+                            <span class="text-lg">Real-time dashboard dengan profit breakdown</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i data-feather="check-circle" class="w-6 h-6 text-success mt-1"></i>
+                            <span class="text-lg">Channel performance analysis</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="bg-gray-100 rounded-xl h-80 flex items-center justify-center">
+                    <div class="text-center">
+                        <i data-feather="bar-chart-2" class="w-16 h-16 text-primary mx-auto mb-4"></i>
+                        <p class="text-gray-500">[Screenshot: Analytics Dashboard]</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="bg-gray-100 rounded-xl h-80 flex items-center justify-center order-2 lg:order-1">
+                    <div class="text-center">
+                        <i data-feather="dollar-sign" class="w-16 h-16 text-primary mx-auto mb-4"></i>
+                        <p class="text-gray-500">[Screenshot: Zakat Calculator]</p>
+                    </div>
+                </div>
+                <div class="order-1 lg:order-2">
+                    <h3 class="text-2xl md:text-3xl font-bold mb-6">
+                        🕌 Malaysian Business Features
+                    </h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start space-x-3">
+                            <i data-feather="check-circle" class="w-6 h-6 text-success mt-1"></i>
+                            <span class="text-lg">Auto-calculate zakat perniagaan (2.5% standard)</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i data-feather="check-circle" class="w-6 h-6 text-success mt-1"></i>
+                            <span class="text-lg">Inventory management dengan low stock alerts</span>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <i data-feather="check-circle" class="w-6 h-6 text-success mt-1"></i>
+                            <span class="text-lg">Agent/reseller commission tracking</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof -->
+    <section id="testimonials" class="py-16 bg-gradient-to-r from-primary to-secondary text-white">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-12">
+                Apa Kata SME Owners Yang Dah Guna?
+            </h2>
+            
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <div class="bg-white/10 backdrop-blur-sm p-8 rounded-xl">
+                    <div class="flex justify-center mb-4">
+                        ⭐⭐⭐⭐⭐
+                    </div>
+                    <p class="text-lg mb-6">
+                        "Sebelum ni aku spend 2 jam setiap hari untuk key-in data dari Shopee & TikTok. Sekarang 15 minit dah settle semua!"
+                    </p>
+                    <div class="flex items-center justify-center space-x-3">
+                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                            <span class="font-bold">AB</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Ahmad Bukhari</p>
+                            <p class="text-sm opacity-80">Fashion Store, KL</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white/10 backdrop-blur-sm p-8 rounded-xl">
+                    <div class="flex justify-center mb-4">
+                        ⭐⭐⭐⭐⭐
+                    </div>
+                    <p class="text-lg mb-6">
+                        "Zakat calculator sangat membantu! Auto calculate based on profit & inventory. Tak payah pening kepala."
+                    </p>
+                    <div class="flex items-center justify-center space-x-3">
+                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                            <span class="font-bold">SM</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Siti Mariam</p>
+                            <p class="text-sm opacity-80">Cosmetics Business</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white/10 backdrop-blur-sm p-8 rounded-xl">
+                    <div class="flex justify-center mb-4">
+                        ⭐⭐⭐⭐⭐
+                    </div>
+                    <p class="text-lg mb-6">
+                        "Receipt scanner memang power! Scan terus auto-fill semua data. Macam magic!"
+                    </p>
+                    <div class="flex items-center justify-center space-x-3">
+                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                            <span class="font-bold">LW</span>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Lim Wei Ming</p>
+                            <p class="text-sm opacity-80">Electronics Store</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section - ACTION -->
+    <section id="pricing" class="py-16">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6">
+                Harga Yang Berpatutan
+            </h2>
+            <p class="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">
+                Start dengan free trial, upgrade bila business dah berkembang
+            </p>
+            
+            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <!-- Free Plan -->
+                <div class="bg-white p-8 rounded-xl shadow-lg border-2 border-gray-200">
+                    <h3 class="text-2xl font-bold mb-4">Starter</h3>
+                    <div class="text-4xl font-bold mb-6">
+                        <span class="gradient-text">PERCUMA</span>
+                    </div>
+                    <ul class="space-y-3 mb-8 text-left">
+                        <li class="flex items-center space-x-3">
+                            <i data-feather="check" class="w-5 h-5 text-success"></i>
+                            <span>50 transactions/bulan</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <i data-feather="check" class="w-5 h-5 text-success"></i>
+                            <span>Basic dashboard</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <i data-feather="check" class="w-5 h-5 text-success"></i>
+                            <span>Receipt scanner</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <i data-feather="check" class="w-5 h-5 text-success"></i>
+                            <span>CSV import</span>
+                        </li>
+                    </ul>
+                    <a href="{{ url_for('index') }}" class="w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors block">
+                        Mula Sekarang
+                    </a>
+                </div>
+                
+                <!-- Pro Plan -->
+                <div class="bg-primary text-white p-8 rounded-xl shadow-xl border-2 border-primary transform scale-105">
+                    <div class="bg-white text-primary px-3 py-1 rounded-full text-sm font-semibold inline-block mb-4">
+                        POPULAR
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Pro</h3>
+                    <div class="text-4xl font-bold mb-6">
+                        RM49<span class="text-lg font-normal">/bulan</span>
+                    </div>
+                    <ul class="space-y-3 mb-8 text-left">
+                        <li class="flex items-center space-x-3">
+                            <i data-feather="check" class="w-5 h-5 text-white"></i>
+                            <span>Unlimited transactions</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <i data-feather="check" class="w-5 h-5 text-white"></i>
+                            <span>Advanced analytics</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <i data-feather="check" class="w-5 h-5 text-white"></i>
+                            <span>Zakat calculator</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <i data-feather="check" class="w-5 h-5 text-white"></i>
+                            <span>Inventory management</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <i data-feather="check" class="w-5 h-5 text-white"></i>
+                            <span>Agent tracking</span>
+                        </li>
+                    </ul>
+                    <a href="{{ url_for('index') }}" class="w-full bg-white text-primary py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors block">
+                        Upgrade ke Pro
+                    </a>
+                </div>
+                
+                <!-- Enterprise Plan -->
+                <div class="bg-white p-8 rounded-xl shadow-lg border-2 border-gray-200">
+                    <h3 class="text-2xl font-bold mb-4">Enterprise</h3>
+                    <div class="text-4xl font-bold mb-6">
+                        <span class="gradient-text">RM199</span><span class="text-lg font-normal text-gray-600">/bulan</span>
+                    </div>
+                    <ul class="space-y-3 mb-8 text-left">
+                        <li class="flex items-center space-x-3">
+                            <i data-feather="check" class="w-5 h-5 text-success"></i>
+                            <span>Semua Pro features</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <i data-feather="check" class="w-5 h-5 text-success"></i>
+                            <span>Multi-user access</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <i data-feather="check" class="w-5 h-5 text-success"></i>
+                            <span>API integration</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <i data-feather="check" class="w-5 h-5 text-success"></i>
+                            <span>Priority support</span>
+                        </li>
+                        <li class="flex items-center space-x-3">
+                            <i data-feather="check" class="w-5 h-5 text-success"></i>
+                            <span>Custom reports</span>
+                        </li>
+                    </ul>
+                    <a href="#" class="w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors block">
+                        Hubungi Sales
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="py-16 bg-gradient-to-r from-primary to-secondary text-white">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6">
+                Ready Untuk Automatik Accounting System?
+            </h2>
+            <p class="text-xl mb-8 max-w-3xl mx-auto">
+                Join 1000+ Malaysian SMEs yang dah save masa & increase profit dengan PocketBizz
+            </p>
+            
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <a href="{{ url_for('index') }}" class="bg-white text-primary px-8 py-4 rounded-xl text-lg font-semibold hover:bg-gray-100 transition-all transform hover:scale-105">
+                    🚀 Start Free Trial Sekarang
+                </a>
+                <a href="#demo" class="border-2 border-white text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white hover:text-primary transition-all">
+                    📞 Book Demo Call
+                </a>
+            </div>
+            
+            <p class="text-sm mt-6 opacity-80">
+                ✅ No credit card required • ✅ 7-day free trial • ✅ Cancel anytime
+            </p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
+                            <i data-feather="smartphone" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">PocketBizz</h3>
+                    </div>
+                    <p class="text-gray-400">
+                        Sistem perakaunan mobile-first untuk SME Malaysia yang busy.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Product</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#features" class="hover:text-white transition-colors">Features</a></li>
+                        <li><a href="#pricing" class="hover:text-white transition-colors">Pricing</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Updates</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Support</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">Help Center</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Contact Us</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">WhatsApp Support</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Legal</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Refund Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2025 PocketBizz. Made with ❤️ for Malaysian SMEs.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Feather icons
+        feather.replace();
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+        
+        // Navbar background on scroll
+        window.addEventListener('scroll', function() {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 100) {
+                nav.classList.add('bg-white/90');
+            } else {
+                nav.classList.remove('bg-white/90');
+            }
+        });
+    </script>
+</body>
+</html>

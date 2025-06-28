@@ -27,6 +27,11 @@ def is_pdf_file(filename):
 def is_image_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
 
+@app.route('/landing')
+def landing():
+    """Landing page for marketing"""
+    return render_template('landing.html')
+
 @app.route('/')
 def index():
     """Dashboard showing today's summary and recent transactions"""
