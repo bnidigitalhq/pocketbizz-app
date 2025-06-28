@@ -69,7 +69,7 @@ def add_transaction():
 
 @app.route('/add_transaction', methods=['POST'])
 def add_transaction_post():
-    """Handle transaction addition"""
+    """Handle transaction addition with optional PDF attachment"""
     try:
         transaction_type = request.form.get('type')
         amount = float(request.form.get('amount'))
@@ -84,6 +84,31 @@ def add_transaction_post():
         else:
             transaction_date = datetime.now()
         
+        # Handle PDF upload from smart scan
+        receipt_pdf_path = None
+        if 'receipt_pdf' in request.files:
+            pdf_file = request.files['receipt_pdf']
+            if pdf_file and pdf_file.filename and pdf_file.filename.endswith('.pdf'):
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
+                pdf_filename = timestamp + secure_filename(pdf_file.filename)
+                pdf_path = os.path.join(UPLOAD_FOLDER, pdf_filename)
+                pdf_file.save(pdf_path)
+                receipt_pdf_path = pdf_filename
+        
+        # Handle regular image upload (backwards compatibility)
+        receipt_image_path = None
+        if 'receipt_image' in request.files:
+            image_file = request.files['receipt_image']
+            if image_file and image_file.filename and allowed_file(image_file.filename):
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
+                image_filename = timestamp + secure_filename(image_file.filename)
+                image_path = os.path.join(UPLOAD_FOLDER, image_filename)
+                image_file.save(image_path)
+                receipt_image_path = image_filename
+        
+        # Use PDF path if available, otherwise use image path
+        receipt_attachment = receipt_pdf_path or receipt_image_path
+        
         # Create new transaction
         transaction = Transaction(
             type=transaction_type,
@@ -91,17 +116,18 @@ def add_transaction_post():
             description=description,
             channel=channel,
             category=category,
-            date=transaction_date
+            date=transaction_date,
+            receipt_image=receipt_attachment  # Store PDF or image path
         )
         
         db.session.add(transaction)
         db.session.commit()
         
-        flash('Transaksi berjaya ditambah!', 'success')
+        flash('Transaction saved successfully!', 'success')
         return redirect(url_for('index'))
         
     except Exception as e:
-        flash(f'Ralat: {str(e)}', 'error')
+        flash(f'Error: {str(e)}', 'error')
         return redirect(url_for('add_transaction'))
 
 @app.route('/scan_receipt')

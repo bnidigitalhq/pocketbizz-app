@@ -1,215 +1,277 @@
 {% extends "base.html" %}
 
-{% block title %}Imbas Resit - SME Accounting{% endblock %}
+{% block title %}Smart Scan Receipt{% endblock %}
 
 {% block content %}
-<div class="p-4">
+<div class="container-fluid px-4 pb-20">
     <!-- Header -->
-    <div class="flex items-center mb-6">
-        <button onclick="history.back()" class="mr-3 p-2 text-gray-600 hover:text-gray-800">
-            <i data-feather="arrow-left" class="w-6 h-6"></i>
-        </button>
-        <h1 class="text-2xl font-bold text-gray-800">Imbas Resit</h1>
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">🤖 Smart Scan Receipt</h1>
+        <p class="text-gray-600">Auto-detect, crop, OCR & generate PDF</p>
     </div>
 
-    <!-- Upload Section -->
-    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-        <div class="text-center">
-            <div id="uploadArea" class="border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-shopee-orange transition-colors cursor-pointer">
-                <i data-feather="camera" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
-                <h3 class="text-lg font-medium text-gray-800 mb-2">Ambil Gambar atau Pilih Fail</h3>
-                <p class="text-gray-600 mb-4">Imbas resit/invois untuk auto-detect jumlah dan tarikh</p>
+    <!-- Camera Section -->
+    <div class="mb-6">
+        <div class="bg-white rounded-xl p-6 shadow-lg">
+            <!-- Camera Container -->
+            <div id="cameraContainer" class="relative mb-4 bg-gray-900 rounded-lg overflow-hidden" style="aspect-ratio: 3/4;">
+                <!-- Camera Stream -->
+                <video id="cameraStream" class="w-full h-full object-cover hidden" autoplay playsinline></video>
                 
-                <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                    <button type="button" onclick="openCamera()" class="px-6 py-3 bg-shopee-orange text-white rounded-lg hover:bg-red-600 transition-colors">
-                        <i data-feather="camera" class="w-5 h-5 inline mr-2"></i>
-                        Ambil Gambar
-                    </button>
-                    <button type="button" onclick="selectFile()" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                        <i data-feather="upload" class="w-5 h-5 inline mr-2"></i>
-                        Pilih Fail
-                    </button>
+                <!-- Canvas for processing -->
+                <canvas id="captureCanvas" class="w-full h-full object-cover hidden"></canvas>
+                <canvas id="processCanvas" class="hidden"></canvas>
+                
+                <!-- Document Detection Overlay -->
+                <canvas id="overlayCanvas" class="absolute inset-0 w-full h-full pointer-events-none hidden"></canvas>
+                
+                <!-- Placeholder -->
+                <div id="cameraPlaceholder" class="flex items-center justify-center h-full text-white">
+                    <div class="text-center">
+                        <div class="w-20 h-20 mx-auto mb-4 border-2 border-dashed border-gray-500 rounded-lg flex items-center justify-center">
+                            <i data-feather="camera" class="w-8 h-8 text-gray-400"></i>
+                        </div>
+                        <p class="text-gray-300">Tap to start camera</p>
+                        <p class="text-sm text-gray-500 mt-1">Auto-detect document borders</p>
+                    </div>
                 </div>
-                
-                <div class="mt-4 pt-4 border-t border-gray-200">
-                    <button type="button" onclick="showManualEntrySection()" class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
-                        <i data-feather="edit" class="w-5 h-5 inline mr-2"></i>
-                        Masukkan Manual Tanpa Imbas
-                    </button>
+
+                <!-- Scanning Indicator -->
+                <div id="scanningIndicator" class="absolute top-4 left-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm hidden">
+                    <div class="flex items-center">
+                        <div class="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
+                        Document Detected
+                    </div>
                 </div>
+
+                <!-- Capture Button -->
+                <button id="captureBtn" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white hover:bg-gray-100 text-gray-800 w-16 h-16 rounded-full shadow-lg hidden transition-all">
+                    <i data-feather="camera" class="w-6 h-6"></i>
+                </button>
                 
-                <input type="file" id="fileInput" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
-                <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelect(event)">
+                <!-- Processing Indicator -->
+                <div id="processingIndicator" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+                    <div class="text-center text-white">
+                        <div class="animate-spin w-8 h-8 border-4 border-white border-t-transparent rounded-full mx-auto mb-4"></div>
+                        <p>Processing document...</p>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Preview Section -->
-    <div id="previewSection" class="bg-white rounded-lg shadow-md p-4 mb-6 hidden">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Preview Imej</h3>
-        <div class="text-center">
-            <img id="previewImage" class="max-w-full h-64 object-contain mx-auto rounded-lg mb-4" alt="Preview">
+            <!-- Action Buttons -->
             <div class="flex gap-3 justify-center">
-                <button onclick="processImage()" class="px-6 py-3 bg-shopee-blue text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    <i data-feather="eye" class="w-5 h-5 inline mr-2"></i>
-                    Cuba OCR
+                <button id="startCameraBtn" class="bg-shopee-orange hover:bg-shopee-orange/90 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transition-all">
+                    <i data-feather="camera" class="w-5 h-5"></i>
+                    Start Camera
                 </button>
-                <button onclick="skipOCRToManual()" class="px-6 py-3 bg-shopee-orange text-white rounded-lg hover:bg-red-600 transition-colors">
-                    <i data-feather="edit" class="w-5 h-5 inline mr-2"></i>
-                    Skip ke Manual
+                
+                <button id="uploadBtn" class="bg-shopee-blue hover:bg-shopee-blue/90 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transition-all">
+                    <i data-feather="upload" class="w-5 h-5"></i>
+                    Upload Image
                 </button>
-                <button onclick="clearPreview()" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                    <i data-feather="x" class="w-5 h-5 inline mr-2"></i>
-                    Batal
+                <input type="file" id="fileInput" accept="image/*" class="hidden">
+            </div>
+
+            <!-- Processing Controls -->
+            <div id="processingControls" class="flex gap-3 justify-center mt-4 hidden">
+                <button id="retakeBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                    <i data-feather="refresh-cw" class="w-4 h-4"></i>
+                    Rescan
+                </button>
+                
+                <button id="cropBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                    <i data-feather="crop" class="w-4 h-4"></i>
+                    Auto Crop
+                </button>
+                
+                <button id="generatePdfBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                    <i data-feather="file-text" class="w-4 h-4"></i>
+                    Generate PDF
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Processing -->
-    <div id="processingSection" class="bg-white rounded-lg shadow-md p-4 mb-6 hidden">
-        <div class="text-center">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-shopee-orange mb-4"></div>
-            <h3 class="text-lg font-semibold text-gray-800 mb-2">Memproses Imej...</h3>
-            <p class="text-gray-600">Sedang mengesan teks dari resit. Sila tunggu sebentar.</p>
-        </div>
-    </div>
-
-    <!-- OCR Results -->
-    <div id="resultsSection" class="bg-white rounded-lg shadow-md p-4 mb-6 hidden">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Hasil OCR</h3>
-        
-        <!-- Detected Text -->
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Teks yang dikesan:</label>
-            <textarea id="detectedText" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none bg-gray-50" readonly></textarea>
-        </div>
-        
-        <!-- Extracted Information -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah (RM):</label>
-                <input type="number" id="extractedAmount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Tarikh:</label>
-                <input type="date" id="extractedDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+    <!-- Results Section -->
+    <div id="resultsSection" class="hidden">
+        <!-- PDF Preview -->
+        <div id="pdfPreview" class="bg-white rounded-xl p-6 shadow-lg mb-6 hidden">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">📄 PDF Generated</h3>
+            <div class="text-center">
+                <div class="bg-gray-100 p-8 rounded-lg mb-4">
+                    <i data-feather="file-text" class="w-16 h-16 text-gray-400 mx-auto mb-2"></i>
+                    <p class="text-gray-600">PDF document ready</p>
+                    <p class="text-sm text-gray-500" id="pdfSize">Size: --</p>
+                </div>
+                <div class="flex gap-3 justify-center">
+                    <button id="viewPdfBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                        <i data-feather="eye" class="w-4 h-4"></i>
+                        View PDF
+                    </button>
+                    <button id="downloadPdfBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                        <i data-feather="download" class="w-4 h-4"></i>
+                        Download
+                    </button>
+                </div>
             </div>
         </div>
-        
-        <div class="flex gap-3">
-            <button onclick="useExtractedData()" class="flex-1 px-6 py-3 bg-success-green text-white rounded-lg hover:bg-green-600 transition-colors">
-                <i data-feather="check" class="w-5 h-5 inline mr-2"></i>
-                Guna Data Ini
-            </button>
-            <button onclick="editManually()" class="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                <i data-feather="edit" class="w-5 h-5 inline mr-2"></i>
-                Edit Manual
-            </button>
-        </div>
-    </div>
 
-    <!-- Manual Entry Form (shown after OCR or direct edit) -->
-    <div id="manualEntrySection" class="hidden">
-        <form method="POST" action="{{ url_for('add_transaction_post') }}">
-            <input type="hidden" name="type" value="expense">
+        <!-- OCR Results -->
+        <div id="ocrResults" class="bg-white rounded-xl p-6 shadow-lg mb-6 hidden">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">🧠 OCR Extraction</h3>
             
-            <!-- Amount -->
-            <div class="bg-white rounded-lg shadow-md p-4 mb-4">
-                <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">Jumlah (RM)</label>
-                <div class="relative">
-                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-lg">RM</span>
-                    <input type="number" 
-                           name="amount" 
-                           id="manualAmount" 
-                           step="0.01" 
-                           min="0"
-                           placeholder="0.00"
-                           class="w-full pl-12 pr-4 py-3 text-xl font-bold border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent"
-                           required>
+            <!-- Loading State -->
+            <div id="ocrLoading" class="text-center py-8 hidden">
+                <div class="animate-spin w-8 h-8 border-4 border-shopee-orange border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p class="text-gray-600">Extracting text from document...</p>
+            </div>
+
+            <!-- Extracted Data -->
+            <div id="extractedData" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Amount (RM):</label>
+                    <input type="number" id="extractedAmount" class="w-full p-3 border border-gray-300 rounded-lg" step="0.01" placeholder="0.00">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date:</label>
+                    <input type="date" id="extractedDate" class="w-full p-3 border border-gray-300 rounded-lg">
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Vendor/Store:</label>
+                    <input type="text" id="extractedVendor" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Store or vendor name">
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Detected Text:</label>
+                    <textarea id="ocrTextArea" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50" rows="3" readonly></textarea>
                 </div>
             </div>
 
-            <!-- Description -->
-            <div class="bg-white rounded-lg shadow-md p-4 mb-4">
-                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Keterangan</label>
-                <input type="text" 
-                       name="description" 
-                       id="manualDescription" 
-                       placeholder="Keterangan perbelanjaan"
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent"
-                       required>
-            </div>
-
-            <!-- Channel -->
-            <div class="bg-white rounded-lg shadow-md p-4 mb-4">
-                <label for="channel" class="block text-sm font-medium text-gray-700 mb-2">Saluran</label>
-                <select name="channel" 
-                        id="manualChannel"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent"
-                        required>
-                    <option value="">Pilih saluran</option>
-                    <option value="shopee">🛒 Shopee</option>
-                    <option value="tiktok">🎵 TikTok Shop</option>
-                    <option value="walkin">🏪 Walk-in</option>
-                    <option value="agent">👥 Ejen</option>
-                    <option value="online">💻 Online</option>
-                    <option value="other">📦 Lain-lain</option>
-                </select>
-            </div>
-
-            <!-- Category -->
-            <div class="bg-white rounded-lg shadow-md p-4 mb-4">
-                <label for="category" class="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
-                <select name="category" 
-                        id="manualCategory"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
-                    <option value="">Pilih kategori</option>
-                    <option value="Inventory">Inventori</option>
-                    <option value="Marketing">Pemasaran</option>
-                    <option value="Shipping">Penghantaran</option>
-                    <option value="Office Supplies">Bekalan Pejabat</option>
-                    <option value="Utilities">Utiliti</option>
-                    <option value="Transportation">Pengangkutan</option>
-                    <option value="Other Expenses">Perbelanjaan Lain</option>
-                </select>
-            </div>
-
-            <!-- Date -->
-            <div class="bg-white rounded-lg shadow-md p-4 mb-4">
-                <label for="date" class="block text-sm font-medium text-gray-700 mb-2">Tarikh</label>
-                <input type="date" 
-                       name="date" 
-                       id="manualDate" 
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent"
-                       required>
-            </div>
-
-            <!-- Submit Button -->
-            <div class="bg-white rounded-lg shadow-md p-4">
-                <button type="submit" 
-                        class="w-full py-4 bg-shopee-orange text-white font-semibold rounded-lg hover:bg-red-600 transition-colors">
-                    <i data-feather="save" class="w-5 h-5 inline mr-2"></i>
-                    Simpan Transaksi
+            <!-- OCR Actions -->
+            <div id="ocrActions" class="flex gap-3 justify-center mt-6 hidden">
+                <button id="runOcrBtn" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                    <i data-feather="zap" class="w-4 h-4"></i>
+                    Run OCR
+                </button>
+                <button id="useDataBtn" class="bg-success-green hover:bg-success-green/90 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                    <i data-feather="check" class="w-4 h-4"></i>
+                    Use Data
+                </button>
+                <button id="editManualBtn" class="bg-warning-yellow hover:bg-warning-yellow/90 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                    <i data-feather="edit" class="w-4 h-4"></i>
+                    Edit Manual
                 </button>
             </div>
-        </form>
+        </div>
+
+        <!-- Manual Entry Form -->
+        <div id="manualEntry" class="bg-white rounded-xl p-6 shadow-lg mb-6 hidden">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">✏️ Transaction Details</h3>
+            
+            <form id="transactionForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <!-- Transaction Type -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Transaction Type:</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="type" value="expense" class="mr-2" checked>
+                                <span class="text-error-red">Expense</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="type" value="income" class="mr-2">
+                                <span class="text-success-green">Income</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Amount -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Amount (RM) *:</label>
+                        <input type="number" name="amount" class="w-full p-3 border border-gray-300 rounded-lg" step="0.01" placeholder="0.00" required>
+                    </div>
+
+                    <!-- Date -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date *:</label>
+                        <input type="date" name="date" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description *:</label>
+                        <input type="text" name="description" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Transaction description" required>
+                    </div>
+
+                    <!-- Channel -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Channel:</label>
+                        <select name="channel" class="w-full p-3 border border-gray-300 rounded-lg">
+                            <option value="shopee">🛒 Shopee</option>
+                            <option value="tiktok">🎵 TikTok Shop</option>
+                            <option value="walkin">🚶‍♀️ Walk-in</option>
+                            <option value="agent">👥 Agent</option>
+                            <option value="online">💻 Online Lain</option>
+                        </select>
+                    </div>
+
+                    <!-- Category -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Category:</label>
+                        <input type="text" name="category" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Category (optional)">
+                    </div>
+                </div>
+
+                <!-- PDF Attachment -->
+                <div id="pdfAttachment" class="mb-4 hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Attached PDF:</label>
+                    <div class="flex items-center p-3 bg-gray-50 border border-gray-300 rounded-lg">
+                        <i data-feather="file-text" class="w-5 h-5 text-gray-500 mr-2"></i>
+                        <span id="pdfFileName" class="text-gray-700">receipt_scan.pdf</span>
+                        <span id="pdfFileSize" class="text-sm text-gray-500 ml-2">(-- KB)</span>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="text-center">
+                    <button type="submit" class="bg-shopee-orange hover:bg-shopee-orange/90 text-white px-8 py-3 rounded-lg shadow-lg transition-all">
+                        <i data-feather="save" class="w-5 h-5 mr-2 inline"></i>
+                        Save Transaction & PDF
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- Tips -->
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 class="font-medium text-blue-800 mb-2">💡 Tips untuk hasil OCR yang lebih baik:</h4>
-        <ul class="text-sm text-blue-700 space-y-1">
-            <li>• Pastikan pencahayaan yang mencukupi</li>
-            <li>• Letakkan resit pada permukaan yang rata</li>
-            <li>• Elakkan bayangan dan pantulan</li>
-            <li>• Fokus pada bahagian jumlah dan tarikh</li>
-        </ul>
+    <!-- Tips Section -->
+    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-lg">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i data-feather="info" class="w-5 h-5 text-blue-400"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-800">💡 Smart Scan Features</h3>
+                <div class="mt-2 text-sm text-blue-700">
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Auto-detect document borders like CamScanner</li>
+                        <li>Auto-crop and straighten receipt images</li>
+                        <li>Generate PDF documents automatically</li>
+                        <li>Extract amount, date, and vendor with OCR</li>
+                        <li>Save PDF attachment with transaction data</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
-<script src="{{ url_for('static', filename='js/ocr.js') }}"></script>
+<!-- Load Required Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://docs.opencv.org/4.x/opencv.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+
+<!-- Load Smart Scan Script -->
+<script src="{{ url_for('static', filename='js/scan.js') }}"></script>
 {% endblock %}
