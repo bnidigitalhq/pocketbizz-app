@@ -140,14 +140,20 @@ function showNotification(message, type = 'info') {
         'bg-blue-500'
     }`;
     
-    notification.innerHTML = `
-        <div class="flex items-center justify-between">
-            <span>${message}</span>
-            <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white hover:text-gray-200">
-                <i data-feather="x" class="w-4 h-4"></i>
-            </button>
-        </div>
-    `;
+    const messageSpan = document.createElement('span');
+    messageSpan.textContent = message; // Safe: textContent prevents XSS
+    
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'flex items-center justify-between';
+    
+    const closeButton = document.createElement('button');
+    closeButton.onclick = () => notification.remove();
+    closeButton.className = 'ml-3 text-white hover:text-gray-200';
+    closeButton.innerHTML = '<i data-feather="x" class="w-4 h-4"></i>';
+    
+    buttonContainer.appendChild(messageSpan);
+    buttonContainer.appendChild(closeButton);
+    notification.appendChild(buttonContainer);
     
     document.body.appendChild(notification);
     
