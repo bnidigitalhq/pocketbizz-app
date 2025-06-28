@@ -304,6 +304,11 @@ def delete_transaction(transaction_id):
     flash('Transaksi berjaya dipadam!', 'success')
     return redirect(url_for('index'))
 
+@app.route('/features')
+def features():
+    """All features page"""
+    return render_template('features.html')
+
 @app.route('/settings')
 def settings():
     """Business settings page"""

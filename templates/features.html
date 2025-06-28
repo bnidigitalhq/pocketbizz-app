@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Semua Features{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 pb-20">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">🚀 Semua Features</h1>
+        <p class="text-gray-600">Akses semua tools untuk bisnes anda</p>
+    </div>
+
+    <!-- Core Features -->
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">📊 Core Accounting</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <a href="{{ url_for('index') }}" class="feature-card glass-card p-4 rounded-xl hover:shadow-lg transition-all">
+                <div class="w-12 h-12 bg-shopee-orange/10 rounded-full flex items-center justify-center mb-3">
+                    <i data-feather="home" class="w-6 h-6 text-shopee-orange"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800">Dashboard</h3>
+                <p class="text-sm text-gray-600">Ringkasan harian</p>
+            </a>
+
+            <a href="{{ url_for('add_transaction') }}" class="feature-card glass-card p-4 rounded-xl hover:shadow-lg transition-all">
+                <div class="w-12 h-12 bg-success-green/10 rounded-full flex items-center justify-center mb-3">
+                    <i data-feather="plus-circle" class="w-6 h-6 text-success-green"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800">Add Transaction</h3>
+                <p class="text-sm text-gray-600">Manual entry</p>
+            </a>
+
+            <a href="{{ url_for('reports') }}" class="feature-card glass-card p-4 rounded-xl hover:shadow-lg transition-all">
+                <div class="w-12 h-12 bg-warning-yellow/10 rounded-full flex items-center justify-center mb-3">
+                    <i data-feather="bar-chart-2" class="w-6 h-6 text-warning-yellow"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800">Laporan</h3>
+                <p class="text-sm text-gray-600">Analytics & reports</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- Smart Tools -->
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">🤖 Smart Tools</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <a href="{{ url_for('scan_receipt') }}" class="feature-card glass-card p-4 rounded-xl hover:shadow-lg transition-all">
+                <div class="w-12 h-12 bg-shopee-blue/10 rounded-full flex items-center justify-center mb-3">
+                    <i data-feather="camera" class="w-6 h-6 text-shopee-blue"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800">Scan Resit</h3>
+                <p class="text-sm text-gray-600">OCR scanning</p>
+            </a>
+
+            <button onclick="showCSVUpload()" class="feature-card glass-card p-4 rounded-xl hover:shadow-lg transition-all text-left">
+                <div class="w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center mb-3">
+                    <i data-feather="upload" class="w-6 h-6 text-purple-500"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800">Smart Import</h3>
+                <p class="text-sm text-gray-600">CSV auto-import</p>
+            </button>
+
+            <a href="{{ url_for('export_pdf') }}" class="feature-card glass-card p-4 rounded-xl hover:shadow-lg transition-all">
+                <div class="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mb-3">
+                    <i data-feather="file-text" class="w-6 h-6 text-red-500"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800">Export PDF</h3>
+                <p class="text-sm text-gray-600">Professional reports</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- Business Management -->
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">📦 Business Management</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <a href="{{ url_for('inventory') }}" class="feature-card glass-card p-4 rounded-xl hover:shadow-lg transition-all">
+                <div class="w-12 h-12 bg-purple-600/10 rounded-full flex items-center justify-center mb-3">
+                    <i data-feather="package" class="w-6 h-6 text-purple-600"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800">Urus Stok</h3>
+                <p class="text-sm text-gray-600">Inventory tracking</p>
+            </a>
+
+            <a href="{{ url_for('agents') }}" class="feature-card glass-card p-4 rounded-xl hover:shadow-lg transition-all">
+                <div class="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center mb-3">
+                    <i data-feather="users" class="w-6 h-6 text-indigo-500"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800">Urus Ejen</h3>
+                <p class="text-sm text-gray-600">Agent management</p>
+            </a>
+
+            <a href="{{ url_for('zakat') }}" class="feature-card glass-card p-4 rounded-xl hover:shadow-lg transition-all">
+                <div class="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mb-3">
+                    <i data-feather="heart" class="w-6 h-6 text-emerald-500"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800">Kira Zakat</h3>
+                <p class="text-sm text-gray-600">Islamic zakat calc</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">⚡ Quick Actions</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <a href="{{ url_for('add_product') }}" class="feature-card glass-card p-4 rounded-xl hover:shadow-lg transition-all">
+                <div class="w-12 h-12 bg-teal-500/10 rounded-full flex items-center justify-center mb-3">
+                    <i data-feather="plus" class="w-6 h-6 text-teal-500"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800">Tambah Produk</h3>
+                <p class="text-sm text-gray-600">New inventory</p>
+            </a>
+
+            <a href="{{ url_for('add_agent') }}" class="feature-card glass-card p-4 rounded-xl hover:shadow-lg transition-all">
+                <div class="w-12 h-12 bg-cyan-500/10 rounded-full flex items-center justify-center mb-3">
+                    <i data-feather="user-plus" class="w-6 h-6 text-cyan-500"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800">Tambah Ejen</h3>
+                <p class="text-sm text-gray-600">New agent/reseller</p>
+            </a>
+
+            <a href="{{ url_for('submit_agent_order') }}" class="feature-card glass-card p-4 rounded-xl hover:shadow-lg transition-all">
+                <div class="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mb-3">
+                    <i data-feather="file-plus" class="w-6 h-6 text-orange-500"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800">Submit Order</h3>
+                <p class="text-sm text-gray-600">Agent order entry</p>
+            </a>
+
+            <a href="{{ url_for('agent_orders') }}" class="feature-card glass-card p-4 rounded-xl hover:shadow-lg transition-all">
+                <div class="w-12 h-12 bg-pink-500/10 rounded-full flex items-center justify-center mb-3">
+                    <i data-feather="list" class="w-6 h-6 text-pink-500"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800">Agent Orders</h3>
+                <p class="text-sm text-gray-600">Order management</p>
+            </a>
+
+            <a href="{{ url_for('print_report') }}" target="_blank" class="feature-card glass-card p-4 rounded-xl hover:shadow-lg transition-all">
+                <div class="w-12 h-12 bg-slate-500/10 rounded-full flex items-center justify-center mb-3">
+                    <i data-feather="printer" class="w-6 h-6 text-slate-500"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800">Print Report</h3>
+                <p class="text-sm text-gray-600">Printable format</p>
+            </a>
+
+            <a href="{{ url_for('settings') }}" class="feature-card glass-card p-4 rounded-xl hover:shadow-lg transition-all">
+                <div class="w-12 h-12 bg-gray-500/10 rounded-full flex items-center justify-center mb-3">
+                    <i data-feather="settings" class="w-6 h-6 text-gray-500"></i>
+                </div>
+                <h3 class="font-semibold text-gray-800">Settings</h3>
+                <p class="text-sm text-gray-600">Business config</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- Platform Integration -->
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">🛒 Platform Integration</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="glass-card p-4 rounded-xl">
+                <div class="flex items-center mb-3">
+                    <div class="w-8 h-8 bg-shopee-orange rounded-full flex items-center justify-center mr-3">
+                        <span class="text-white text-xs font-bold">S</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-800">Shopee</h3>
+                </div>
+                <p class="text-sm text-gray-600 mb-3">Upload CSV dari Shopee Seller Center untuk auto-import sales data</p>
+                <button onclick="showCSVUpload()" class="text-sm text-shopee-orange hover:underline">Import Sekarang →</button>
+            </div>
+
+            <div class="glass-card p-4 rounded-xl">
+                <div class="flex items-center mb-3">
+                    <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center mr-3">
+                        <span class="text-white text-xs font-bold">T</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-800">TikTok Shop</h3>
+                </div>
+                <p class="text-sm text-gray-600 mb-3">Import order reports dari TikTok Shop Seller Center</p>
+                <button onclick="showCSVUpload()" class="text-sm text-black hover:underline">Import Sekarang →</button>
+            </div>
+
+            <div class="glass-card p-4 rounded-xl">
+                <div class="flex items-center mb-3">
+                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-3">
+                        <span class="text-white text-xs font-bold">L</span>
+                    </div>
+                    <h3 class="font-semibold text-gray-800">Lazada</h3>
+                </div>
+                <p class="text-sm text-gray-600 mb-3">Upload sales data dari Lazada Seller Center</p>
+                <button onclick="showCSVUpload()" class="text-sm text-blue-600 hover:underline">Import Sekarang →</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.feature-card {
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
