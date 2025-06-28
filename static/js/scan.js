@@ -175,7 +175,8 @@ class SmartScanner {
 
     async detectDocumentBorders(canvas) {
         if (typeof cv === 'undefined') {
-            return null;
+            console.warn('OpenCV not loaded, trying fallback detection');
+            return this.fallbackRectangleDetection(canvas);
         }
 
         try {
@@ -183,27 +184,32 @@ class SmartScanner {
             const src = cv.imread(canvas);
             const gray = new cv.Mat();
             const blur = new cv.Mat();
+            const thresh = new cv.Mat();
             const edges = new cv.Mat();
             const dilated = new cv.Mat();
             const contours = new cv.MatVector();
             const hierarchy = new cv.Mat();
 
-            // Enhanced preprocessing for better edge detection
+            // Enhanced preprocessing for receipts
             cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
             
-            // Apply morphological operations to enhance receipt edges
+            // Apply bilateral filter to reduce noise while keeping edges sharp
+            const filtered = new cv.Mat();
+            cv.bilateralFilter(gray, filtered, 9, 75, 75);
+            
+            // Adaptive threshold to handle varying lighting
+            cv.adaptiveThreshold(filtered, thresh, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 2);
+            
+            // Apply median blur to reduce noise
+            cv.medianBlur(thresh, blur, 5);
+            
+            // Canny edge detection with optimized parameters for receipts
+            cv.Canny(blur, edges, 50, 150, 3);
+            
+            // Morphological operations to connect broken edges
             const kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3, 3));
-            const opened = new cv.Mat();
-            cv.morphologyEx(gray, opened, cv.MORPH_OPEN, kernel);
-            
-            // Gaussian blur
-            cv.GaussianBlur(opened, blur, new cv.Size(5, 5), 0);
-            
-            // Adaptive Canny with lower thresholds for better receipt detection
-            cv.Canny(blur, edges, 20, 80);
-            
-            // Dilate edges to close gaps
             cv.dilate(edges, dilated, kernel);
+            cv.erode(dilated, dilated, kernel);
 
             // Find contours
             cv.findContours(dilated, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
@@ -211,27 +217,29 @@ class SmartScanner {
             let bestContour = null;
             let maxArea = 0;
             const imageArea = canvas.width * canvas.height;
-            const minArea = imageArea * 0.02; // At least 2% of image (more sensitive)
-            const maxAreaThreshold = imageArea * 0.95; // Not more than 95%
+            const minArea = imageArea * 0.01; // Very sensitive - 1% of image
+            const maxAreaThreshold = imageArea * 0.98;
 
             for (let i = 0; i < contours.size(); i++) {
                 const contour = contours.get(i);
                 const area = cv.contourArea(contour);
                 
-                if (area > minArea && area < maxAreaThreshold && area > maxArea) {
-                    // More flexible approximation for irregular receipts
-                    const epsilon = 0.005 * cv.arcLength(contour, true); // Reduced epsilon
+                if (area > minArea && area < maxAreaThreshold) {
+                    // Calculate contour properties
+                    const perimeter = cv.arcLength(contour, true);
+                    const epsilon = 0.01 * perimeter; // Very detailed approximation
                     const approx = new cv.Mat();
                     cv.approxPolyDP(contour, approx, epsilon, true);
                     
-                    // Accept 4-8 sided polygons (receipts may not be perfect rectangles)
-                    if (approx.rows >= 4 && approx.rows <= 8) {
-                        // Calculate aspect ratio to filter out obviously wrong shapes
+                    // Accept polygons with 4+ vertices
+                    if (approx.rows >= 4) {
                         const rect = cv.boundingRect(contour);
                         const aspectRatio = rect.width / rect.height;
+                        const rectArea = rect.width * rect.height;
+                        const density = area / rectArea; // How much of bounding rect is filled
                         
-                        // Receipts are typically tall (aspect ratio 0.3 to 2.0)
-                        if (aspectRatio > 0.2 && aspectRatio < 3.0) {
+                        // Receipt criteria: tall shape, good density
+                        if (aspectRatio > 0.1 && aspectRatio < 5.0 && density > 0.3 && area > maxArea) {
                             maxArea = area;
                             if (bestContour) bestContour.delete();
                             bestContour = approx.clone();
@@ -245,8 +253,9 @@ class SmartScanner {
             // Clean up
             src.delete();
             gray.delete();
-            opened.delete();
+            filtered.delete();
             blur.delete();
+            thresh.delete();
             edges.delete();
             dilated.delete();
             kernel.delete();
@@ -254,27 +263,42 @@ class SmartScanner {
             hierarchy.delete();
 
             if (bestContour) {
-                // Extract corner points and reduce to 4 corners
                 const allCorners = [];
                 for (let i = 0; i < bestContour.rows; i++) {
                     const point = bestContour.data32S.slice(i * 2, i * 2 + 2);
                     allCorners.push({ x: point[0], y: point[1] });
                 }
                 
-                // Find the 4 extreme corner points
                 const corners = this.findExtremeCorners(allCorners);
                 bestContour.delete();
                 
-                // Order corners (top-left, top-right, bottom-right, bottom-left)
+                console.log('Document detected with OpenCV:', corners);
                 return this.orderCorners(corners);
             }
 
-            return null;
+            // Fallback if no contour found
+            console.log('No document detected, using fallback');
+            return this.fallbackRectangleDetection(canvas);
 
         } catch (error) {
             console.error('OpenCV processing error:', error);
-            return null;
+            return this.fallbackRectangleDetection(canvas);
         }
+    }
+
+    fallbackRectangleDetection(canvas) {
+        // Simple fallback: assume document takes up most of the image
+        const margin = Math.min(canvas.width, canvas.height) * 0.05; // 5% margin
+        
+        const corners = [
+            { x: margin, y: margin }, // top-left
+            { x: canvas.width - margin, y: margin }, // top-right  
+            { x: canvas.width - margin, y: canvas.height - margin }, // bottom-right
+            { x: margin, y: canvas.height - margin } // bottom-left
+        ];
+        
+        console.log('Using fallback rectangle detection:', corners);
+        return corners;
     }
 
     findExtremeCorners(allCorners) {
@@ -654,83 +678,215 @@ class SmartScanner {
     }
 
     processOCRResult(text) {
-        // Extract data from OCR text
+        console.log('Processing OCR result:', text);
+        
+        // Extract data from OCR text with enhanced Malaysian receipt parsing
         const extractedData = this.extractDataFromText(text);
         
-        // Fill form fields
-        if (extractedData.amount) {
+        // Fill form fields if elements exist
+        if (this.extractedAmount && extractedData.amount) {
             this.extractedAmount.value = extractedData.amount;
         }
-        if (extractedData.date) {
+        if (this.extractedDate && extractedData.date) {
             this.extractedDate.value = extractedData.date;
         }
-        if (extractedData.vendor) {
+        if (this.extractedVendor && extractedData.vendor) {
             this.extractedVendor.value = extractedData.vendor;
         }
+        if (this.ocrTextArea) {
+            this.ocrTextArea.value = text;
+        }
         
-        this.ocrTextArea.value = text;
-        this.extractedData.style.display = 'grid';
+        // Show extracted data section
+        if (this.extractedData) {
+            this.extractedData.style.display = 'grid';
+        }
+        
+        // Auto-fill transaction form for immediate submission
+        this.autoFillMainTransactionForm(extractedData);
+        
+        console.log('Extracted data:', extractedData);
+    }
+
+    autoFillMainTransactionForm(data) {
+        // Auto-fill the main transaction form elements
+        try {
+            const amountInput = document.querySelector('input[name="amount"]');
+            const descInput = document.querySelector('input[name="description"]');
+            const dateInput = document.querySelector('input[name="date"]');
+            const typeInput = document.querySelector('select[name="type"]');
+            const channelInput = document.querySelector('select[name="channel"]');
+            
+            if (amountInput && data.amount) {
+                amountInput.value = data.amount;
+                console.log('Filled amount:', data.amount);
+            }
+            
+            if (descInput && data.vendor) {
+                descInput.value = data.vendor;
+                console.log('Filled description:', data.vendor);
+            }
+            
+            if (dateInput && data.date) {
+                dateInput.value = data.date;
+                console.log('Filled date:', data.date);
+            }
+            
+            // Set default values for receipt scans
+            if (typeInput) {
+                typeInput.value = 'expense';
+                console.log('Set type to expense');
+            }
+            
+            if (channelInput) {
+                channelInput.value = 'walkin';
+                console.log('Set channel to walkin');
+            }
+            
+        } catch (error) {
+            console.error('Error auto-filling main form:', error);
+        }
     }
 
     extractDataFromText(text) {
+        console.log('Extracting Malaysian receipt data from:', text.substring(0, 300));
+        
         const result = { amount: '', date: '', vendor: '' };
         
-        // Extract amount (RM/MYR patterns)
+        // Enhanced amount extraction for Malaysian receipts
         const amountPatterns = [
-            /RM\s*(\d+\.?\d*)/i,
-            /MYR\s*(\d+\.?\d*)/i,
-            /\$\s*(\d+\.?\d*)/,
-            /(\d+\.\d{2})/
+            /Total\s*:?\s*RM\s*(\d+\.?\d*)/gi,
+            /TOTAL\s*:?\s*RM\s*(\d+\.?\d*)/gi,
+            /SubTotal\s*:?\s*RM\s*(\d+\.?\d*)/gi,
+            /Cash\s*:?\s*RM\s*(\d+\.?\d*)/gi,
+            /Amount\s*:?\s*RM\s*(\d+\.?\d*)/gi,
+            /RM\s*(\d+\.\d{2})\s*$/gm, // RM amount at end of line
+            /(\d+\.\d{2})\s*RM/gi,
+            /RM\s*(\d+\.?\d*)/gi,
+            /(\d{1,4}\.\d{2})(?=\s*$)/gm // Decimal amount at end of line
         ];
+
+        let maxAmount = 0;
+        let foundAmounts = [];
         
         for (const pattern of amountPatterns) {
-            const match = text.match(pattern);
-            if (match) {
-                result.amount = parseFloat(match[1]).toFixed(2);
-                break;
+            const matches = [...text.matchAll(pattern)];
+            for (const match of matches) {
+                let amount = match[1] || match[0];
+                amount = amount.replace(/[^\d.]/g, '');
+                const numAmount = parseFloat(amount);
+                
+                if (numAmount > 0 && numAmount < 10000) { // Reasonable receipt amount
+                    foundAmounts.push(numAmount);
+                    if (numAmount > maxAmount) {
+                        maxAmount = numAmount;
+                        result.amount = numAmount.toFixed(2);
+                    }
+                }
             }
         }
         
-        // Extract date patterns
+        console.log('Found amounts:', foundAmounts, 'Selected:', result.amount);
+
+        // Enhanced date extraction for Malaysian format
         const datePatterns = [
-            /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/,
-            /(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/,
-            /(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})/i
+            /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/g,
+            /(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/g,
+            /(\d{1,2})\s+(Jan|Feb|Mac|Apr|Mei|Jun|Jul|Ogo|Sep|Okt|Nov|Dis)\s+(\d{4})/gi,
+            /(\d{2})\/(\d{2})\/(\d{4})/g,
+            /(\d{2})-(\d{2})-(\d{4})/g
         ];
-        
+
         for (const pattern of datePatterns) {
-            const match = text.match(pattern);
-            if (match) {
+            const matches = [...text.matchAll(pattern)];
+            for (const match of matches) {
                 try {
+                    let dateStr = match[0];
+                    
+                    // Convert Malaysian month names to English
+                    dateStr = dateStr.replace(/Mac/gi, 'Mar');
+                    dateStr = dateStr.replace(/Mei/gi, 'May');
+                    dateStr = dateStr.replace(/Ogo/gi, 'Aug');
+                    dateStr = dateStr.replace(/Okt/gi, 'Oct');
+                    dateStr = dateStr.replace(/Dis/gi, 'Dec');
+                    
                     let date;
-                    if (match[0].includes('Jan') || match[0].includes('Feb')) {
-                        // Month name format
-                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                        const monthIndex = months.findIndex(m => match[2].toLowerCase().includes(m.toLowerCase()));
-                        date = new Date(parseInt(match[3]), monthIndex, parseInt(match[1]));
-                    } else {
-                        // Numeric format
-                        date = new Date(match[3], match[2] - 1, match[1]);
+                    if (match[3] && match[3].length === 4) {
+                        // Has year as 4 digits
+                        if (dateStr.includes('Jan') || dateStr.includes('Feb') || dateStr.includes('Mar')) {
+                            // Month name format
+                            date = new Date(dateStr);
+                        } else {
+                            // Numeric DD/MM/YYYY or MM/DD/YYYY
+                            date = new Date(match[3], match[2] - 1, match[1]);
+                        }
                     }
-                    result.date = date.toISOString().split('T')[0];
-                    break;
+                    
+                    if (date && !isNaN(date.getTime()) && date.getFullYear() > 2020 && date.getFullYear() < 2030) {
+                        result.date = date.toISOString().split('T')[0];
+                        console.log('Found date:', result.date);
+                        break;
+                    }
                 } catch (e) {
                     console.log('Date parsing error:', e);
                 }
             }
+            if (result.date) break;
+        }
+
+        // Enhanced vendor extraction for Malaysian businesses
+        const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+        
+        // Look for vendor in first few lines, prioritizing business names
+        for (let i = 0; i < Math.min(10, lines.length); i++) {
+            const line = lines[i].trim();
+            
+            // Skip obvious non-vendor lines
+            if (line.match(/^\d+$/) || // Just numbers
+                line.match(/^[\/\-_=]+$/) || // Just separators
+                line.toLowerCase().includes('receipt') ||
+                line.toLowerCase().includes('invoice') ||
+                line.toLowerCase().includes('tax') ||
+                line.toLowerCase().includes('gst') ||
+                line.toLowerCase().includes('date') ||
+                line.toLowerCase().includes('time') ||
+                line.match(/RM\s*\d/) || // Price lines
+                line.match(/^\d{1,2}\/\d{1,2}\/\d{4}/) || // Date lines
+                line.match(/^\d{1,2}-\d{1,2}-\d{4}/) || // Date lines
+                line.length < 3 || line.length > 60) {
+                continue;
+            }
+            
+            // Prioritize lines that look like business names
+            if (line.match(/sdn\s*bhd/gi) || // Malaysian company suffix
+                line.match(/\b(kedai|restoran|cafe|shop|store|mart|enterprise|trading)\b/gi) || // Business keywords
+                (line.length > 5 && line.length < 40 && 
+                 !line.match(/\d{4}/) && // No years
+                 !line.match(/\d+\.\d{2}/) && // No amounts
+                 line.match(/[a-zA-Z].*[a-zA-Z]/))) { // Has letters at start and end
+                result.vendor = line;
+                console.log('Found vendor:', result.vendor);
+                break;
+            }
         }
         
-        // Extract vendor (first line that's not amount/date)
-        const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 2);
-        for (const line of lines) {
-            if (!line.match(/\d+\.\d{2}/) && !line.match(/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}/)) {
-                if (line.length > 3 && line.length < 50) {
+        // If still no vendor, try fallback
+        if (!result.vendor && lines.length > 0) {
+            for (let i = 0; i < Math.min(5, lines.length); i++) {
+                const line = lines[i].trim();
+                if (line.length > 3 && line.length < 50 && 
+                    !line.match(/\d{4}/) && 
+                    !line.match(/RM\s*\d/) &&
+                    !line.match(/^\d+$/) &&
+                    line.match(/[a-zA-Z]/)) {
                     result.vendor = line;
+                    console.log('Fallback vendor:', result.vendor);
                     break;
                 }
             }
         }
-        
+
+        console.log('Final extracted data:', result);
         return result;
     }
 
@@ -815,23 +971,52 @@ class SmartScanner {
     }
 
     async autoProcessDocument() {
+        console.log('Starting auto-processing...');
+        this.showProcessingIndicator(true);
+        
         try {
-            // Step 1: Auto-detect and crop document
+            // Step 1: Ensure we have detected corners or use fallback
+            if (!this.documentCorners) {
+                console.log('No document corners detected, detecting now...');
+                const corners = await this.detectDocumentBorders(this.canvas);
+                if (corners) {
+                    this.documentCorners = corners;
+                    console.log('Document detected:', corners);
+                } else {
+                    console.log('Using fallback detection');
+                    this.documentCorners = this.fallbackRectangleDetection(this.canvas);
+                }
+            }
+            
+            // Step 2: Auto-crop document
+            console.log('Auto-cropping document...');
             await this.autoCropDocument();
             
-            // Step 2: Generate PDF automatically  
+            // Wait a moment for cropping to complete
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Step 3: Generate PDF automatically  
+            console.log('Generating PDF...');
             await this.generatePDF();
             
-            // Step 3: Run OCR to extract data
+            // Wait a moment for PDF generation
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Step 4: Run OCR to extract data
+            console.log('Running OCR...');
             await this.runOCR();
             
-            // Step 4: Show final results
+            // Step 5: Show final results
+            console.log('Showing results...');
             this.showFinalResults();
             
         } catch (error) {
             console.error('Auto-processing failed:', error);
-            // Fallback to manual entry
+            this.showProcessingIndicator(false);
+            
+            // Show manual entry as fallback
             this.showManualEntry();
+            alert('Auto-processing failed. Please enter transaction details manually.');
         }
     }
     
