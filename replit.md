@@ -127,6 +127,14 @@ The application is built with Flask backend and designed with a user experience 
 - ✅ **Premium Touch Effects**: Haptic feedback, scale animations, ripple effects, and glassmorphism UI
 - ✅ **PDF Export & Print**: Professional report generation with ReportLab for download and printing
 
+### June 28, 2025 - Smart Import Tools & Dashboard Enhancements
+- ✅ **Smart Import Tools**: Multi-platform CSV import for Shopee, TikTok Shop, Lazada with auto-mapping
+- ✅ **Platform Templates**: Sample CSV downloads and format validation for each platform
+- ✅ **Intelligent Field Mapping**: Auto-detect CSV columns and map to transaction fields
+- ✅ **Enhanced Dashboard**: New features section with quick access to all business tools
+- ✅ **Advanced CSV Processing**: Support for multiple date formats and currency symbols
+- ✅ **Template System**: Complete agent, product, and order management templates
+
 ### System Architecture Updates
 - **Database**: Now using PostgreSQL with connection pooling and health checks
 - **UI Framework**: Enhanced Tailwind CSS implementation with custom Shopee-inspired color scheme
