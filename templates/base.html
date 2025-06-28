@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SME Accounting App{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'shopee-orange': '#EE4D2D',
+                        'shopee-blue': '#1976D2',
+                        'success-green': '#10B981',
+                        'warning-yellow': '#F59E0B',
+                        'error-red': '#EF4444',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-inter pb-20">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="fixed top-4 left-4 right-4 z-50">
+                {% for category, message in messages %}
+                    <div class="mb-2 p-3 rounded-lg text-white {% if category == 'success' %}bg-success-green{% elif category == 'error' %}bg-error-red{% else %}bg-shopee-blue{% endif %} shadow-lg">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="min-h-screen">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <div class="flex justify-around items-center py-2">
+            <!-- Dashboard -->
+            <a href="{{ url_for('index') }}" class="nav-item flex flex-col items-center p-2 {% if request.endpoint == 'index' %}text-shopee-orange{% else %}text-gray-600{% endif %}">
+                <i data-feather="home" class="w-6 h-6"></i>
+                <span class="text-xs mt-1">Dashboard</span>
+            </a>
+            
+            <!-- Add Transaction -->
+            <a href="{{ url_for('add_transaction') }}" class="nav-item flex flex-col items-center p-2 {% if request.endpoint == 'add_transaction' %}text-shopee-orange{% else %}text-gray-600{% endif %}">
+                <i data-feather="plus-circle" class="w-6 h-6"></i>
+                <span class="text-xs mt-1">Tambah</span>
+            </a>
+            
+            <!-- Scan Receipt -->
+            <a href="{{ url_for('scan_receipt') }}" class="nav-item flex flex-col items-center p-2 {% if request.endpoint == 'scan_receipt' %}text-shopee-orange{% else %}text-gray-600{% endif %}">
+                <i data-feather="camera" class="w-6 h-6"></i>
+                <span class="text-xs mt-1">Imbas</span>
+            </a>
+            
+            <!-- Reports -->
+            <a href="{{ url_for('reports') }}" class="nav-item flex flex-col items-center p-2 {% if request.endpoint == 'reports' %}text-shopee-orange{% else %}text-gray-600{% endif %}">
+                <i data-feather="bar-chart-2" class="w-6 h-6"></i>
+                <span class="text-xs mt-1">Laporan</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+    
+    <script>
+        // Initialize Feather icons
+        feather.replace();
+        
+        // Auto-hide flash messages
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.fixed.top-4 > div');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-100%)';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 3000);
+    </script>
+</body>
+</html>

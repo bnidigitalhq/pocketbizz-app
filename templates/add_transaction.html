@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Tambah Transaksi - SME Accounting{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <!-- Header -->
+    <div class="flex items-center mb-6">
+        <button onclick="history.back()" class="mr-3 p-2 text-gray-600 hover:text-gray-800">
+            <i data-feather="arrow-left" class="w-6 h-6"></i>
+        </button>
+        <h1 class="text-2xl font-bold text-gray-800">Tambah Transaksi</h1>
+    </div>
+
+    <!-- Transaction Type Toggle -->
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+        <div class="flex bg-gray-100 rounded-lg p-1">
+            <button type="button" onclick="setTransactionType('income')" id="incomeBtn" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors bg-success-green text-white">
+                <i data-feather="trending-up" class="w-4 h-4 inline mr-2"></i>
+                Pendapatan
+            </button>
+            <button type="button" onclick="setTransactionType('expense')" id="expenseBtn" class="flex-1 py-2 px-4 rounded-md text-sm font-medium text-gray-600 hover:text-gray-800">
+                <i data-feather="trending-down" class="w-4 h-4 inline mr-2"></i>
+                Perbelanjaan
+            </button>
+        </div>
+    </div>
+
+    <!-- Transaction Form -->
+    <form method="POST" class="space-y-6">
+        <input type="hidden" name="type" id="transactionType" value="income">
+        
+        <!-- Amount -->
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">Jumlah (RM)</label>
+            <div class="relative">
+                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-lg">RM</span>
+                <input type="number" 
+                       name="amount" 
+                       id="amount" 
+                       step="0.01" 
+                       min="0"
+                       placeholder="0.00"
+                       class="w-full pl-12 pr-4 py-3 text-xl font-bold border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent"
+                       required>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Keterangan</label>
+            <input type="text" 
+                   name="description" 
+                   id="description" 
+                   placeholder="Contoh: Jualan produk, Belanja iklan"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent"
+                   required>
+        </div>
+
+        <!-- Channel -->
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <label for="channel" class="block text-sm font-medium text-gray-700 mb-2">Saluran Bisnes</label>
+            <select name="channel" 
+                    id="channel"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent"
+                    required>
+                <option value="">Pilih saluran</option>
+                <option value="shopee">🛒 Shopee</option>
+                <option value="tiktok">🎵 TikTok Shop</option>
+                <option value="walkin">🏪 Walk-in</option>
+                <option value="agent">👥 Ejen</option>
+                <option value="online">💻 Online Lain</option>
+                <option value="other">📦 Lain-lain</option>
+            </select>
+        </div>
+
+        <!-- Category -->
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <label for="category" class="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
+            <select name="category" 
+                    id="category"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                <option value="">Pilih kategori</option>
+                <!-- Income categories -->
+                <optgroup label="Pendapatan" id="incomeCategories">
+                    <option value="Product Sales">Jualan Produk</option>
+                    <option value="Service">Perkhidmatan</option>
+                    <option value="Commission">Komisen</option>
+                    <option value="Other Income">Pendapatan Lain</option>
+                </optgroup>
+                <!-- Expense categories -->
+                <optgroup label="Perbelanjaan" id="expenseCategories" style="display: none;">
+                    <option value="Inventory">Inventori</option>
+                    <option value="Marketing">Pemasaran</option>
+                    <option value="Shipping">Penghantaran</option>
+                    <option value="Office Supplies">Bekalan Pejabat</option>
+                    <option value="Utilities">Utiliti</option>
+                    <option value="Transportation">Pengangkutan</option>
+                    <option value="Other Expenses">Perbelanjaan Lain</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <!-- Date -->
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <label for="date" class="block text-sm font-medium text-gray-700 mb-2">Tarikh</label>
+            <input type="date" 
+                   name="date" 
+                   id="date" 
+                   value="{{ moment().format('YYYY-MM-DD') if moment else '' }}"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent"
+                   required>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <button type="submit" 
+                    class="w-full py-4 bg-shopee-orange text-white font-semibold rounded-lg hover:bg-red-600 transition-colors">
+                <i data-feather="check" class="w-5 h-5 inline mr-2"></i>
+                Simpan Transaksi
+            </button>
+        </div>
+    </form>
+
+    <!-- Quick Add Buttons -->
+    <div class="mt-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">Tambah Pantas</h3>
+        <div class="grid grid-cols-2 gap-3">
+            <button onclick="quickAdd('income', 'shopee')" class="p-4 bg-white rounded-lg shadow-md border-l-4 border-success-green hover:bg-gray-50 transition-colors">
+                <div class="flex items-center">
+                    <i data-feather="shopping-bag" class="w-6 h-6 text-shopee-orange mr-3"></i>
+                    <div class="text-left">
+                        <p class="font-medium text-gray-800">Jualan Shopee</p>
+                        <p class="text-sm text-gray-600">Pendapatan</p>
+                    </div>
+                </div>
+            </button>
+            
+            <button onclick="quickAdd('income', 'tiktok')" class="p-4 bg-white rounded-lg shadow-md border-l-4 border-success-green hover:bg-gray-50 transition-colors">
+                <div class="flex items-center">
+                    <i data-feather="video" class="w-6 h-6 text-gray-800 mr-3"></i>
+                    <div class="text-left">
+                        <p class="font-medium text-gray-800">TikTok Shop</p>
+                        <p class="text-sm text-gray-600">Pendapatan</p>
+                    </div>
+                </div>
+            </button>
+            
+            <button onclick="quickAdd('expense', 'marketing')" class="p-4 bg-white rounded-lg shadow-md border-l-4 border-error-red hover:bg-gray-50 transition-colors">
+                <div class="flex items-center">
+                    <i data-feather="megaphone" class="w-6 h-6 text-red-500 mr-3"></i>
+                    <div class="text-left">
+                        <p class="font-medium text-gray-800">Iklan/Marketing</p>
+                        <p class="text-sm text-gray-600">Perbelanjaan</p>
+                    </div>
+                </div>
+            </button>
+            
+            <button onclick="quickAdd('expense', 'inventory')" class="p-4 bg-white rounded-lg shadow-md border-l-4 border-error-red hover:bg-gray-50 transition-colors">
+                <div class="flex items-center">
+                    <i data-feather="package" class="w-6 h-6 text-red-500 mr-3"></i>
+                    <div class="text-left">
+                        <p class="font-medium text-gray-800">Stok/Inventori</p>
+                        <p class="text-sm text-gray-600">Perbelanjaan</p>
+                    </div>
+                </div>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set today's date as default
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    
+    function setTransactionType(type) {
+        document.getElementById('transactionType').value = type;
+        
+        const incomeBtn = document.getElementById('incomeBtn');
+        const expenseBtn = document.getElementById('expenseBtn');
+        const incomeCategories = document.getElementById('incomeCategories');
+        const expenseCategories = document.getElementById('expenseCategories');
+        
+        if (type === 'income') {
+            incomeBtn.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors bg-success-green text-white';
+            expenseBtn.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium text-gray-600 hover:text-gray-800';
+            incomeCategories.style.display = 'block';
+            expenseCategories.style.display = 'none';
+        } else {
+            incomeBtn.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium text-gray-600 hover:text-gray-800';
+            expenseBtn.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors bg-error-red text-white';
+            incomeCategories.style.display = 'none';
+            expenseCategories.style.display = 'block';
+        }
+        
+        // Clear category selection
+        document.getElementById('category').value = '';
+    }
+    
+    function quickAdd(type, preset) {
+        setTransactionType(type);
+        
+        if (preset === 'shopee') {
+            document.getElementById('channel').value = 'shopee';
+            document.getElementById('category').value = 'Product Sales';
+            document.getElementById('description').value = 'Jualan Shopee';
+        } else if (preset === 'tiktok') {
+            document.getElementById('channel').value = 'tiktok';
+            document.getElementById('category').value = 'Product Sales';
+            document.getElementById('description').value = 'Jualan TikTok Shop';
+        } else if (preset === 'marketing') {
+            document.getElementById('channel').value = 'online';
+            document.getElementById('category').value = 'Marketing';
+            document.getElementById('description').value = 'Belanja Iklan';
+        } else if (preset === 'inventory') {
+            document.getElementById('channel').value = 'other';
+            document.getElementById('category').value = 'Inventory';
+            document.getElementById('description').value = 'Pembelian Stok';
+        }
+        
+        // Focus on amount field
+        document.getElementById('amount').focus();
+    }
+    
+    // Auto-focus on amount field when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('amount').focus();
+    });
+</script>
+{% endblock %}
