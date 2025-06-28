@@ -184,35 +184,58 @@ class SmartScanner {
             const gray = new cv.Mat();
             const blur = new cv.Mat();
             const edges = new cv.Mat();
+            const dilated = new cv.Mat();
             const contours = new cv.MatVector();
             const hierarchy = new cv.Mat();
 
-            // Preprocessing
+            // Enhanced preprocessing for better edge detection
             cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-            cv.GaussianBlur(gray, blur, new cv.Size(5, 5), 0);
-            cv.Canny(blur, edges, 50, 150);
+            
+            // Apply morphological operations to enhance receipt edges
+            const kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(3, 3));
+            const opened = new cv.Mat();
+            cv.morphologyEx(gray, opened, cv.MORPH_OPEN, kernel);
+            
+            // Gaussian blur
+            cv.GaussianBlur(opened, blur, new cv.Size(5, 5), 0);
+            
+            // Adaptive Canny with lower thresholds for better receipt detection
+            cv.Canny(blur, edges, 20, 80);
+            
+            // Dilate edges to close gaps
+            cv.dilate(edges, dilated, kernel);
 
             // Find contours
-            cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+            cv.findContours(dilated, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
             let bestContour = null;
             let maxArea = 0;
-            const minArea = (canvas.width * canvas.height) * 0.1; // At least 10% of image
+            const imageArea = canvas.width * canvas.height;
+            const minArea = imageArea * 0.02; // At least 2% of image (more sensitive)
+            const maxAreaThreshold = imageArea * 0.95; // Not more than 95%
 
             for (let i = 0; i < contours.size(); i++) {
                 const contour = contours.get(i);
                 const area = cv.contourArea(contour);
                 
-                if (area > minArea && area > maxArea) {
-                    // Approximate contour to polygon
-                    const epsilon = 0.02 * cv.arcLength(contour, true);
+                if (area > minArea && area < maxAreaThreshold && area > maxArea) {
+                    // More flexible approximation for irregular receipts
+                    const epsilon = 0.005 * cv.arcLength(contour, true); // Reduced epsilon
                     const approx = new cv.Mat();
                     cv.approxPolyDP(contour, approx, epsilon, true);
                     
-                    // Check if it's a quadrilateral
-                    if (approx.rows === 4) {
-                        maxArea = area;
-                        bestContour = approx.clone();
+                    // Accept 4-8 sided polygons (receipts may not be perfect rectangles)
+                    if (approx.rows >= 4 && approx.rows <= 8) {
+                        // Calculate aspect ratio to filter out obviously wrong shapes
+                        const rect = cv.boundingRect(contour);
+                        const aspectRatio = rect.width / rect.height;
+                        
+                        // Receipts are typically tall (aspect ratio 0.3 to 2.0)
+                        if (aspectRatio > 0.2 && aspectRatio < 3.0) {
+                            maxArea = area;
+                            if (bestContour) bestContour.delete();
+                            bestContour = approx.clone();
+                        }
                     }
                     approx.delete();
                 }
@@ -222,18 +245,24 @@ class SmartScanner {
             // Clean up
             src.delete();
             gray.delete();
+            opened.delete();
             blur.delete();
             edges.delete();
+            dilated.delete();
+            kernel.delete();
             contours.delete();
             hierarchy.delete();
 
             if (bestContour) {
-                // Extract corner points
-                const corners = [];
+                // Extract corner points and reduce to 4 corners
+                const allCorners = [];
                 for (let i = 0; i < bestContour.rows; i++) {
                     const point = bestContour.data32S.slice(i * 2, i * 2 + 2);
-                    corners.push({ x: point[0], y: point[1] });
+                    allCorners.push({ x: point[0], y: point[1] });
                 }
+                
+                // Find the 4 extreme corner points
+                const corners = this.findExtremeCorners(allCorners);
                 bestContour.delete();
                 
                 // Order corners (top-left, top-right, bottom-right, bottom-left)
@@ -246,6 +275,27 @@ class SmartScanner {
             console.error('OpenCV processing error:', error);
             return null;
         }
+    }
+
+    findExtremeCorners(allCorners) {
+        if (allCorners.length <= 4) return allCorners;
+        
+        // Find extreme points to form 4 corners
+        const corners = [];
+        
+        // Top-left: minimum x + y
+        corners.push(allCorners.reduce((min, p) => (p.x + p.y < min.x + min.y) ? p : min));
+        
+        // Top-right: maximum x - y
+        corners.push(allCorners.reduce((max, p) => (p.x - p.y > max.x - max.y) ? p : max));
+        
+        // Bottom-right: maximum x + y
+        corners.push(allCorners.reduce((max, p) => (p.x + p.y > max.x + max.y) ? p : max));
+        
+        // Bottom-left: minimum x - y
+        corners.push(allCorners.reduce((min, p) => (p.x - p.y < min.x - min.y) ? p : min));
+        
+        return corners;
     }
 
     orderCorners(corners) {
