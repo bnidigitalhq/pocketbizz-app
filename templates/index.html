@@ -101,6 +101,32 @@
         </div>
     </div>
 
+    <!-- New Features Quick Access -->
+    <div class="glass-card rounded-lg p-4 mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">🆕 Features Terbaru</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <a href="{{ url_for('inventory') }}" class="premium-button ripple flex flex-col items-center p-4 bg-purple-500 bg-opacity-10 rounded-xl hover:bg-opacity-20 transition-all duration-300">
+                <i data-feather="package" class="w-6 h-6 text-purple-500 mb-2 nav-icon"></i>
+                <span class="text-sm font-medium text-purple-500">Urus Stok</span>
+            </a>
+            
+            <a href="{{ url_for('zakat') }}" class="premium-button ripple flex flex-col items-center p-4 bg-emerald-500 bg-opacity-10 rounded-xl hover:bg-opacity-20 transition-all duration-300">
+                <i data-feather="heart" class="w-6 h-6 text-emerald-500 mb-2 nav-icon"></i>
+                <span class="text-sm font-medium text-emerald-500">Kira Zakat</span>
+            </a>
+            
+            <a href="{{ url_for('agents') }}" class="premium-button ripple flex flex-col items-center p-4 bg-indigo-500 bg-opacity-10 rounded-xl hover:bg-opacity-20 transition-all duration-300">
+                <i data-feather="users" class="w-6 h-6 text-indigo-500 mb-2 nav-icon"></i>
+                <span class="text-sm font-medium text-indigo-500">Urus Ejen</span>
+            </a>
+            
+            <a href="{{ url_for('scan_receipt') }}" class="premium-button ripple flex flex-col items-center p-4 bg-pink-500 bg-opacity-10 rounded-xl hover:bg-opacity-20 transition-all duration-300">
+                <i data-feather="scan" class="w-6 h-6 text-pink-500 mb-2 nav-icon"></i>
+                <span class="text-sm font-medium text-pink-500">Scan Resit</span>
+            </a>
+        </div>
+    </div>
+
     <!-- Channel Performance -->
     {% if channel_stats %}
     <div class="bg-white rounded-lg shadow-md p-4 mb-6">

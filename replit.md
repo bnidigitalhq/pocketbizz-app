@@ -118,6 +118,14 @@ The application is built with Flask backend and designed with a user experience 
 - ✅ **Enhanced Channel Display**: Emoji icons, color coding, and performance percentages
 - ✅ **PostgreSQL Migration**: Upgraded from SQLite to production-ready PostgreSQL database
 
+### June 28, 2025 - Advanced Business Features Release
+- ✅ **Inventory Management**: Complete stock tracking with low stock alerts and movement history
+- ✅ **Zakat Calculator**: Automatic Islamic business zakat calculation with Malaysian compliance
+- ✅ **Agent/Reseller System**: Order submission, approval workflow, and commission tracking
+- ✅ **Enhanced OCR**: Improved receipt scanning with better error handling and fallbacks
+- ✅ **Premium Navigation**: Fixed 5-item navigation bar with consistent spacing across all pages
+- ✅ **Premium Touch Effects**: Haptic feedback, scale animations, ripple effects, and glassmorphism UI
+
 ### System Architecture Updates
 - **Database**: Now using PostgreSQL with connection pooling and health checks
 - **UI Framework**: Enhanced Tailwind CSS implementation with custom Shopee-inspired color scheme
