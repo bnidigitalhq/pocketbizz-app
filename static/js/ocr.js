@@ -319,5 +319,7 @@ window.OCR = {
     processImage,
     clearPreview,
     useExtractedData,
-    editManually
+    editManually,
+    skipOCRToManual,
+    showManualEntrySection
 };
