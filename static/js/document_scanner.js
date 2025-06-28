@@ -47,6 +47,21 @@ class DocumentScanner {
             this.cameraPlaceholder.addEventListener('click', () => this.startCamera());
         }
         
+        // Start camera button
+        const startCameraBtn = document.getElementById('startCameraBtn');
+        if (startCameraBtn) {
+            startCameraBtn.addEventListener('click', () => this.startCamera());
+        }
+        
+        // Upload button
+        const uploadBtn = document.getElementById('uploadBtn');
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', () => {
+                const fileInput = document.getElementById('fileInput');
+                if (fileInput) fileInput.click();
+            });
+        }
+        
         // Capture image when clicking capture button
         if (this.captureBtn) {
             this.captureBtn.addEventListener('click', () => this.captureAndProcess());
@@ -67,6 +82,21 @@ class DocumentScanner {
         const downloadPdfBtn = document.getElementById('downloadPdfBtn');
         if (downloadPdfBtn) {
             downloadPdfBtn.addEventListener('click', () => this.downloadPDF());
+        }
+
+        const viewPdfBtn = document.getElementById('viewPdfBtn');
+        if (viewPdfBtn) {
+            viewPdfBtn.addEventListener('click', () => this.viewPDF());
+        }
+
+        const editManuallyBtn = document.getElementById('editManually');
+        if (editManuallyBtn) {
+            editManuallyBtn.addEventListener('click', () => this.showManualEntry());
+        }
+
+        const resetScanBtn = document.getElementById('resetScan');
+        if (resetScanBtn) {
+            resetScanBtn.addEventListener('click', () => this.resetScan());
         }
     }
 
@@ -642,13 +672,67 @@ class DocumentScanner {
         }
     }
 
+    viewPDF() {
+        if (this.pdfDoc) {
+            const pdfDataUri = this.pdfDoc.output('datauristring');
+            window.open(pdfDataUri, '_blank');
+        }
+    }
+
+    showManualEntry() {
+        const manualSection = document.getElementById('manualEntrySection');
+        if (manualSection) {
+            manualSection.classList.remove('hidden');
+            manualSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    resetScan() {
+        // Reset all scan states
+        this.detectedCorners = null;
+        this.croppedImage = null;
+        this.pdfDoc = null;
+        
+        // Hide result sections
+        const sections = ['croppedResults', 'pdfResults', 'ocrResults', 'manualEntrySection'];
+        sections.forEach(id => {
+            const section = document.getElementById(id);
+            if (section) section.style.display = 'none';
+        });
+        
+        // Clear form inputs
+        if (this.extractedAmount) this.extractedAmount.value = '';
+        if (this.extractedDate) this.extractedDate.value = '';
+        if (this.extractedVendor) this.extractedVendor.value = '';
+        if (this.ocrTextArea) this.ocrTextArea.value = '';
+        
+        // Clear overlays
+        this.clearDocumentOverlay();
+        this.showScanningIndicator(false);
+        
+        // Reset camera
+        if (!this.video.classList.contains('hidden')) {
+            this.startDocumentDetection();
+        }
+        
+        console.log('Scan reset - ready for new scan');
+    }
+
     showProcessingIndicator(message) {
-        // Show processing message
+        const indicator = document.getElementById('processingIndicator');
+        if (indicator) {
+            indicator.classList.remove('hidden');
+            const textElement = indicator.querySelector('p');
+            if (textElement) textElement.textContent = message;
+        }
         console.log('Processing:', message);
     }
 
     hideProcessingIndicator() {
-        // Hide processing message
+        const indicator = document.getElementById('processingIndicator');
+        if (indicator) {
+            indicator.classList.add('hidden');
+        }
         console.log('Processing complete');
     }
 
@@ -658,6 +742,12 @@ class DocumentScanner {
             this.stream = null;
         }
         this.isDetecting = false;
+        
+        // Reset UI
+        if (this.video) this.video.classList.add('hidden');
+        if (this.overlayCanvas) this.overlayCanvas.classList.add('hidden');
+        if (this.captureBtn) this.captureBtn.classList.add('hidden');
+        if (this.cameraPlaceholder) this.cameraPlaceholder.style.display = 'flex';
     }
 }
 
