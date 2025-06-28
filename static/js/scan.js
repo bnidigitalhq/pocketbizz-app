@@ -327,8 +327,14 @@ class SmartScanner {
         if (!file) return;
 
         const img = new Image();
-        img.onload = () => {
-            this.processUploadedImage(img);
+        img.onload = async () => {
+            // Process uploaded image and auto-detect document
+            await this.processUploadedImage(img);
+            
+            // Auto-process like CamScanner: detect → crop → PDF → OCR
+            setTimeout(async () => {
+                await this.autoProcessDocument();
+            }, 1000);
         };
         img.src = URL.createObjectURL(file);
     }
@@ -755,6 +761,47 @@ class SmartScanner {
             a.download = `receipt_scan_${new Date().getTime()}.pdf`;
             a.click();
             URL.revokeObjectURL(url);
+        }
+    }
+
+    async autoProcessDocument() {
+        try {
+            // Step 1: Auto-detect and crop document
+            await this.autoCropDocument();
+            
+            // Step 2: Generate PDF automatically  
+            await this.generatePDF();
+            
+            // Step 3: Run OCR to extract data
+            await this.runOCR();
+            
+            // Step 4: Show final results
+            this.showFinalResults();
+            
+        } catch (error) {
+            console.error('Auto-processing failed:', error);
+            // Fallback to manual entry
+            this.showManualEntry();
+        }
+    }
+    
+    showFinalResults() {
+        // Hide processing indicators
+        this.showProcessingIndicator(false);
+        
+        // Show results section
+        if (this.resultsSection) {
+            this.resultsSection.style.display = 'block';
+        }
+        
+        // Show PDF preview if available
+        if (this.pdfBlob && this.pdfPreview) {
+            this.pdfPreview.style.display = 'block';
+        }
+        
+        // Show OCR results if available
+        if (this.ocrResult && this.ocrResults) {
+            this.ocrResults.style.display = 'block';
         }
     }
 
