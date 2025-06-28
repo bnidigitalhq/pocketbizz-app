@@ -135,6 +135,16 @@ The application is built with Flask backend and designed with a user experience 
 - ✅ **Advanced CSV Processing**: Support for multiple date formats and currency symbols
 - ✅ **Template System**: Complete agent, product, and order management templates
 
+### June 28, 2025 - Smart Scan Receipt System (CamScanner-style)
+- ✅ **Document Border Detection**: Auto-detect receipt/document borders using OpenCV.js
+- ✅ **Auto-Crop & Straighten**: Perspective correction like CamScanner with real-time overlay
+- ✅ **PDF Generation**: Convert scanned images to professional PDF documents using jsPDF
+- ✅ **Advanced OCR**: Extract amount, date, vendor info using Tesseract.js with intelligent parsing
+- ✅ **PDF Attachment System**: Save PDF files alongside transaction data (no more JPEG storage)
+- ✅ **Mobile-First Interface**: CamScanner-inspired UI with real-time document detection
+- ✅ **Smart Data Extraction**: Parse Malaysian RM currency, various date formats, vendor names
+- ✅ **Enhanced File Handling**: Support PDF uploads in transaction system
+
 ### System Architecture Updates
 - **Database**: Now using PostgreSQL with connection pooling and health checks
 - **UI Framework**: Enhanced Tailwind CSS implementation with custom Shopee-inspired color scheme
