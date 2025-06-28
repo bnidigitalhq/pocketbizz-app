@@ -76,26 +76,26 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+    <div class="glass-card rounded-lg p-4 mb-6">
         <h2 class="text-lg font-semibold text-gray-800 mb-4">Tindakan Pantas</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <a href="{{ url_for('add_transaction') }}" class="flex flex-col items-center p-3 bg-shopee-orange bg-opacity-10 rounded-lg hover:bg-opacity-20 transition-colors">
-                <i data-feather="plus" class="w-6 h-6 text-shopee-orange mb-2"></i>
+            <a href="{{ url_for('add_transaction') }}" class="premium-button ripple flex flex-col items-center p-4 bg-shopee-orange bg-opacity-10 rounded-xl hover:bg-opacity-20 transition-all duration-300">
+                <i data-feather="plus" class="w-6 h-6 text-shopee-orange mb-2 nav-icon"></i>
                 <span class="text-sm font-medium text-shopee-orange">Tambah Jualan</span>
             </a>
             
-            <a href="{{ url_for('scan_receipt') }}" class="flex flex-col items-center p-3 bg-shopee-blue bg-opacity-10 rounded-lg hover:bg-opacity-20 transition-colors">
-                <i data-feather="camera" class="w-6 h-6 text-shopee-blue mb-2"></i>
+            <a href="{{ url_for('scan_receipt') }}" class="premium-button ripple flex flex-col items-center p-4 bg-shopee-blue bg-opacity-10 rounded-xl hover:bg-opacity-20 transition-all duration-300">
+                <i data-feather="camera" class="w-6 h-6 text-shopee-blue mb-2 nav-icon"></i>
                 <span class="text-sm font-medium text-shopee-blue">Imbas Resit</span>
             </a>
             
-            <button onclick="showCSVUpload()" class="flex flex-col items-center p-3 bg-success-green bg-opacity-10 rounded-lg hover:bg-opacity-20 transition-colors">
-                <i data-feather="upload" class="w-6 h-6 text-success-green mb-2"></i>
+            <button onclick="showCSVUpload()" class="premium-button ripple flex flex-col items-center p-4 bg-success-green bg-opacity-10 rounded-xl hover:bg-opacity-20 transition-all duration-300">
+                <i data-feather="upload" class="w-6 h-6 text-success-green mb-2 nav-icon"></i>
                 <span class="text-sm font-medium text-success-green">Import CSV</span>
             </button>
             
-            <a href="{{ url_for('reports') }}" class="flex flex-col items-center p-3 bg-warning-yellow bg-opacity-10 rounded-lg hover:bg-opacity-20 transition-colors">
-                <i data-feather="bar-chart-2" class="w-6 h-6 text-warning-yellow mb-2"></i>
+            <a href="{{ url_for('reports') }}" class="premium-button ripple flex flex-col items-center p-4 bg-warning-yellow bg-opacity-10 rounded-xl hover:bg-opacity-20 transition-all duration-300">
+                <i data-feather="bar-chart-2" class="w-6 h-6 text-warning-yellow mb-2 nav-icon"></i>
                 <span class="text-sm font-medium text-warning-yellow">Laporan</span>
             </a>
         </div>

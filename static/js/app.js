@@ -277,55 +277,153 @@ function throttle(func, limit) {
 
 // Floating Action Button Functions
 function initializeFAB() {
+    // Initialize side floating FAB
     const fab = document.getElementById('quickAddFAB');
     const menu = document.getElementById('quickActionsMenu');
     const fabIcon = document.getElementById('fabIcon');
     let isMenuOpen = false;
 
-    if (!fab || !menu || !fabIcon) return;
+    if (fab && menu && fabIcon) {
+        fab.addEventListener('click', function() {
+            isMenuOpen = !isMenuOpen;
+            
+            if (isMenuOpen) {
+                menu.classList.remove('hidden');
+                fabIcon.style.transform = 'rotate(45deg)';
+                
+                const buttons = menu.querySelectorAll('[data-quick-action]');
+                buttons.forEach((button, index) => {
+                    setTimeout(() => {
+                        button.style.opacity = '1';
+                        button.style.transform = 'translateY(0)';
+                    }, index * 50);
+                });
+            } else {
+                fabIcon.style.transform = 'rotate(0deg)';
+                
+                const buttons = menu.querySelectorAll('[data-quick-action]');
+                buttons.forEach((button, index) => {
+                    setTimeout(() => {
+                        button.style.opacity = '0';
+                        button.style.transform = 'translateY(16px)';
+                    }, index * 30);
+                });
+                
+                setTimeout(() => {
+                    menu.classList.add('hidden');
+                }, buttons.length * 30 + 100);
+            }
+        });
 
-    fab.addEventListener('click', function() {
-        isMenuOpen = !isMenuOpen;
+        document.addEventListener('click', function(event) {
+            if (isMenuOpen && !fab.contains(event.target) && !menu.contains(event.target)) {
+                fab.click();
+            }
+        });
+    }
+    
+    // Initialize center FAB
+    initializeCenterFAB();
+}
+
+function initializeCenterFAB() {
+    const centerFab = document.getElementById('centerFAB');
+    const centerMenu = document.getElementById('centerFabMenu');
+    const centerFabIcon = document.getElementById('centerFabIcon');
+    let isCenterMenuOpen = false;
+
+    if (!centerFab || !centerMenu || !centerFabIcon) return;
+
+    // Add premium touch effects
+    centerFab.addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.05)';
+        this.style.boxShadow = '0 10px 25px rgba(238, 77, 45, 0.4)';
+    });
+
+    centerFab.addEventListener('mouseleave', function() {
+        if (!isCenterMenuOpen) {
+            this.style.transform = 'scale(1)';
+            this.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        }
+    });
+
+    centerFab.addEventListener('click', function(e) {
+        e.preventDefault();
+        isCenterMenuOpen = !isCenterMenuOpen;
         
-        if (isMenuOpen) {
-            // Show menu
-            menu.classList.remove('hidden');
-            fabIcon.style.transform = 'rotate(45deg)';
+        if (isCenterMenuOpen) {
+            // Open menu with smooth animation
+            centerMenu.classList.remove('hidden');
+            centerFabIcon.style.transform = 'rotate(45deg)';
+            centerFab.style.transform = 'scale(1.1)';
+            centerFab.style.boxShadow = '0 15px 35px rgba(238, 77, 45, 0.5)';
             
-            // Animate quick action buttons
-            const buttons = menu.querySelectorAll('[data-quick-action]');
-            buttons.forEach((button, index) => {
-                setTimeout(() => {
-                    button.style.opacity = '1';
-                    button.style.transform = 'translateY(0)';
-                }, index * 50);
-            });
-        } else {
-            // Hide menu
-            fabIcon.style.transform = 'rotate(0deg)';
-            
-            // Animate out quick action buttons
-            const buttons = menu.querySelectorAll('[data-quick-action]');
-            buttons.forEach((button, index) => {
-                setTimeout(() => {
-                    button.style.opacity = '0';
-                    button.style.transform = 'translateY(16px)';
-                }, index * 30);
-            });
-            
-            // Hide menu after animation
+            // Animate menu appearance
             setTimeout(() => {
-                menu.classList.add('hidden');
-            }, buttons.length * 30 + 100);
+                centerMenu.style.opacity = '1';
+                centerMenu.style.transform = 'translateX(-50%) translateY(0) scale(1)';
+            }, 50);
+            
+            // Add backdrop blur effect
+            addBackdrop();
+            
+        } else {
+            // Close menu
+            closeCenterFAB();
         }
     });
 
-    // Close menu when clicking outside
+    // Close when clicking outside
     document.addEventListener('click', function(event) {
-        if (isMenuOpen && !fab.contains(event.target) && !menu.contains(event.target)) {
-            fab.click(); // Trigger close animation
+        if (isCenterMenuOpen && !centerFab.contains(event.target) && !centerMenu.contains(event.target)) {
+            closeCenterFAB();
         }
     });
+
+    function closeCenterFAB() {
+        isCenterMenuOpen = false;
+        centerFabIcon.style.transform = 'rotate(0deg)';
+        centerFab.style.transform = 'scale(1)';
+        centerFab.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+        
+        centerMenu.style.opacity = '0';
+        centerMenu.style.transform = 'translateX(-50%) translateY(10px) scale(0.9)';
+        
+        setTimeout(() => {
+            centerMenu.classList.add('hidden');
+        }, 200);
+        
+        removeBackdrop();
+    }
+
+    function addBackdrop() {
+        const backdrop = document.createElement('div');
+        backdrop.id = 'fabBackdrop';
+        backdrop.className = 'fixed inset-0 bg-black bg-opacity-20 z-30 transition-opacity duration-300';
+        backdrop.style.opacity = '0';
+        document.body.appendChild(backdrop);
+        
+        setTimeout(() => {
+            backdrop.style.opacity = '1';
+        }, 50);
+        
+        backdrop.addEventListener('click', closeCenterFAB);
+    }
+
+    function removeBackdrop() {
+        const backdrop = document.getElementById('fabBackdrop');
+        if (backdrop) {
+            backdrop.style.opacity = '0';
+            setTimeout(() => {
+                backdrop.remove();
+            }, 300);
+        }
+    }
+
+    // Initial setup for center menu
+    centerMenu.style.opacity = '0';
+    centerMenu.style.transform = 'translateX(-50%) translateY(10px) scale(0.9)';
+    centerMenu.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
 }
 
 // Pull to Refresh functionality
