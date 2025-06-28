@@ -3,9 +3,21 @@
 {% block title %}Smart Scan Receipt{% endblock %}
 
 {% block head %}
-<!-- CDN Libraries for Document Scanning -->
-<script src="https://docs.opencv.org/4.x/opencv.js"></script>
+<!-- OpenCV.js with proper onload -->
+<script>
+window.Module = {
+    onRuntimeInitialized() {
+        console.log('OpenCV.js loaded successfully');
+        window.opencvReady = true;
+    }
+};
+</script>
+<script async src="https://docs.opencv.org/4.x/opencv.js" onload="console.log('OpenCV script loaded')"></script>
+
+<!-- Tesseract.js -->
 <script src="https://unpkg.com/tesseract.js@v2.1.5/dist/tesseract.min.js"></script>
+
+<!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 {% endblock %}
 
@@ -268,6 +280,6 @@
 
 <!-- CDN Libraries are already loaded in head block -->
 
-<!-- Load Enhanced Document Scanner -->
-<script src="{{ url_for('static', filename='js/document_scanner.js') }}"></script>
+<!-- Load Simple Scanner (Works without OpenCV) -->
+<script src="{{ url_for('static', filename='js/simple_scanner.js') }}"></script>
 {% endblock %}

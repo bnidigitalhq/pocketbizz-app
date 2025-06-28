@@ -144,9 +144,20 @@
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     {% block scripts %}{% endblock %}
     
+    <!-- CSV Upload functionality -->
+    <script src="{{ url_for('static', filename='js/csv_upload.js') }}"></script>
+    
     <script>
         // Initialize Feather icons
         feather.replace();
+        
+        // Make CSV functions globally available
+        window.showCSVUpload = window.CSVUpload?.showCSVUpload || function() {
+            console.warn('CSV Upload not loaded');
+        };
+        window.hideCSVUpload = window.CSVUpload?.hideCSVUpload || function() {
+            console.warn('CSV Upload not loaded');
+        };
         
         // Auto-hide flash messages
         setTimeout(() => {

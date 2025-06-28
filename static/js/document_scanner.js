@@ -101,23 +101,42 @@ class DocumentScanner {
     }
 
     async waitForOpenCV() {
-        // Wait for OpenCV to load
-        const checkOpenCV = () => {
-            if (typeof cv !== 'undefined' && cv.Mat) {
-                console.log('OpenCV.js loaded successfully');
-                return true;
-            }
-            return false;
-        };
+        // Wait for OpenCV to load properly
+        return new Promise((resolve) => {
+            const checkOpenCV = () => {
+                if (typeof cv !== 'undefined' && cv.Mat && cv.imread) {
+                    console.log('OpenCV.js fully loaded and ready');
+                    return true;
+                }
+                return false;
+            };
 
-        if (!checkOpenCV()) {
+            if (checkOpenCV()) {
+                resolve();
+                return;
+            }
+
+            // Check for window.opencvReady flag
+            if (window.opencvReady) {
+                resolve();
+                return;
+            }
+
             console.log('Waiting for OpenCV.js to load...');
             const interval = setInterval(() => {
-                if (checkOpenCV()) {
+                if (checkOpenCV() || window.opencvReady) {
                     clearInterval(interval);
+                    resolve();
                 }
-            }, 100);
-        }
+            }, 500);
+
+            // Timeout after 10 seconds
+            setTimeout(() => {
+                clearInterval(interval);
+                console.warn('OpenCV loading timeout - using fallback mode');
+                resolve();
+            }, 10000);
+        });
     }
 
     async startCamera() {
