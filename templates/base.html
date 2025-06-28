@@ -144,9 +144,9 @@
             </div>
             
             <!-- Scan Receipt -->
-            <a href="{{ url_for('scan_receipt') }}" class="nav-item flex flex-col items-center p-3 transition-all duration-300 hover:scale-105 {% if request.endpoint == 'scan_receipt' %}text-shopee-orange{% else %}text-gray-600 hover:text-shopee-orange{% endif %}">
+            <a href="{{ url_for('scan_receipt') }}" class="nav-item flex flex-col items-center p-3 transition-all duration-300 hover:scale-105 ripple {% if request.endpoint == 'scan_receipt' %}text-shopee-orange{% else %}text-gray-600 hover:text-shopee-orange{% endif %}">
                 <div class="relative">
-                    <i data-feather="camera" class="w-6 h-6 transition-transform duration-300"></i>
+                    <i data-feather="camera" class="w-6 h-6 nav-icon transition-transform duration-300"></i>
                     {% if request.endpoint == 'scan_receipt' %}
                     <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-shopee-orange rounded-full animate-pulse"></div>
                     {% endif %}
@@ -155,9 +155,9 @@
             </a>
             
             <!-- More/Settings -->
-            <a href="{{ url_for('settings') }}" class="nav-item flex flex-col items-center p-3 transition-all duration-300 hover:scale-105 {% if request.endpoint == 'settings' %}text-shopee-orange{% else %}text-gray-600 hover:text-shopee-orange{% endif %}">
+            <a href="{{ url_for('settings') }}" class="nav-item flex flex-col items-center p-3 transition-all duration-300 hover:scale-105 ripple {% if request.endpoint == 'settings' %}text-shopee-orange{% else %}text-gray-600 hover:text-shopee-orange{% endif %}">
                 <div class="relative">
-                    <i data-feather="more-horizontal" class="w-6 h-6 transition-transform duration-300"></i>
+                    <i data-feather="more-horizontal" class="w-6 h-6 nav-icon transition-transform duration-300"></i>
                     {% if request.endpoint == 'settings' %}
                     <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-shopee-orange rounded-full animate-pulse"></div>
                     {% endif %}

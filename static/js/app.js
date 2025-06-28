@@ -31,6 +31,9 @@ function initializeApp() {
     
     // Initialize expense alerts
     checkExpenseLimits();
+    
+    // Initialize premium touch effects
+    initializePremiumEffects();
 }
 
 function setDefaultDates() {
@@ -578,6 +581,91 @@ function createMiniChart(canvasId, data, type = 'line') {
     }
 }
 
+// Premium Touch Effects
+function initializePremiumEffects() {
+    // Add haptic feedback for supported devices
+    function hapticFeedback(intensity = 'light') {
+        if (navigator.vibrate) {
+            const patterns = {
+                light: [10],
+                medium: [20],
+                heavy: [50]
+            };
+            navigator.vibrate(patterns[intensity] || patterns.light);
+        }
+    }
+
+    // Add touch effects to all interactive elements
+    const interactiveElements = document.querySelectorAll('.premium-button, .nav-item, .ripple');
+    
+    interactiveElements.forEach(element => {
+        // Touch start effect
+        element.addEventListener('touchstart', function(e) {
+            this.style.transform = 'scale(0.98)';
+            hapticFeedback('light');
+        }, { passive: true });
+
+        // Touch end effect
+        element.addEventListener('touchend', function(e) {
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 100);
+        }, { passive: true });
+
+        // Mouse press effect for desktop
+        element.addEventListener('mousedown', function(e) {
+            this.style.transform = 'scale(0.98)';
+        });
+
+        element.addEventListener('mouseup', function(e) {
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 100);
+        });
+
+        element.addEventListener('mouseleave', function(e) {
+            this.style.transform = '';
+        });
+    });
+
+    // Add loading states to forms
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<div class="spinner mr-2"></div>Memproses...';
+                hapticFeedback('medium');
+            }
+        });
+    });
+
+    // Add smooth focus transitions to inputs
+    const inputs = document.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'scale(1.02)';
+            this.parentElement.style.transition = 'transform 0.2s ease';
+        });
+
+        input.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'scale(1)';
+        });
+    });
+
+    // Add pulse animation to active elements
+    const activeElements = document.querySelectorAll('.text-shopee-orange');
+    activeElements.forEach(element => {
+        element.style.animation = 'pulse 2s infinite';
+    });
+}
+
+// Add global touch optimization
+document.addEventListener('touchstart', function(e) {
+    // Prevent 300ms click delay on iOS
+}, { passive: true });
+
 // Export for use in other scripts
 window.App = {
     formatCurrency,
@@ -595,5 +683,6 @@ window.App = {
     debounce,
     throttle,
     toggleDarkMode,
-    createMiniChart
+    createMiniChart,
+    initializePremiumEffects
 };
