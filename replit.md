@@ -105,10 +105,29 @@ The application is built with Flask backend and designed with a user experience 
 - **CSS/JS**: Served via Flask static file handling
 - **Security**: File type validation and secure filename processing
 
+## Recent Changes
+
+### June 28, 2025 - Major UI/UX Enhancements
+- ✅ **Floating Action Button (FAB)**: TikTok-style floating "+" button with animated quick actions menu
+- ✅ **Enhanced Dashboard**: Added expense limit progress bars, channel performance with icons and percentages  
+- ✅ **Pull-to-Refresh**: Mobile-friendly gesture to refresh dashboard data
+- ✅ **Smart Alerts**: Expense limit notifications at 80% and 100% of daily budget
+- ✅ **Dark Mode Toggle**: User preference saving with localStorage
+- ✅ **Settings Page**: Complete business settings management interface
+- ✅ **Quick Add Integration**: Pre-filled transaction forms from FAB actions
+- ✅ **Enhanced Channel Display**: Emoji icons, color coding, and performance percentages
+- ✅ **PostgreSQL Migration**: Upgraded from SQLite to production-ready PostgreSQL database
+
+### System Architecture Updates
+- **Database**: Now using PostgreSQL with connection pooling and health checks
+- **UI Framework**: Enhanced Tailwind CSS implementation with custom Shopee-inspired color scheme
+- **JavaScript**: Modular app.js with FAB, pull-to-refresh, and dark mode functionality
+- **Templates**: Responsive mobile-first design with Bahasa Malaysia throughout
+
 ## Changelog
 
-Changelog:
-- June 28, 2025. Initial setup
+- June 28, 2025: Initial setup and core features
+- June 28, 2025: Major UI/UX enhancement release with FAB, alerts, and settings
 
 ## User Preferences
 

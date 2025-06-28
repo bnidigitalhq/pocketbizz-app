@@ -15,11 +15,11 @@
     <!-- Transaction Type Toggle -->
     <div class="bg-white rounded-lg shadow-md p-4 mb-6">
         <div class="flex bg-gray-100 rounded-lg p-1">
-            <button type="button" onclick="setTransactionType('income')" id="incomeBtn" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors bg-success-green text-white">
+            <button type="button" onclick="setTransactionType('income')" id="incomeBtn" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors {% if prefill_type == 'income' or not prefill_type %}bg-success-green text-white{% else %}text-gray-600 hover:text-gray-800{% endif %}">
                 <i data-feather="trending-up" class="w-4 h-4 inline mr-2"></i>
                 Pendapatan
             </button>
-            <button type="button" onclick="setTransactionType('expense')" id="expenseBtn" class="flex-1 py-2 px-4 rounded-md text-sm font-medium text-gray-600 hover:text-gray-800">
+            <button type="button" onclick="setTransactionType('expense')" id="expenseBtn" class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors {% if prefill_type == 'expense' %}bg-error-red text-white{% else %}text-gray-600 hover:text-gray-800{% endif %}">
                 <i data-feather="trending-down" class="w-4 h-4 inline mr-2"></i>
                 Perbelanjaan
             </button>
@@ -28,7 +28,7 @@
 
     <!-- Transaction Form -->
     <form method="POST" class="space-y-6">
-        <input type="hidden" name="type" id="transactionType" value="income">
+        <input type="hidden" name="type" id="transactionType" value="{{ prefill_type or 'income' }}">
         
         <!-- Amount -->
         <div class="bg-white rounded-lg shadow-md p-4">
@@ -65,12 +65,12 @@
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent"
                     required>
                 <option value="">Pilih saluran</option>
-                <option value="shopee">🛒 Shopee</option>
-                <option value="tiktok">🎵 TikTok Shop</option>
-                <option value="walkin">🏪 Walk-in</option>
-                <option value="agent">👥 Ejen</option>
-                <option value="online">💻 Online Lain</option>
-                <option value="other">📦 Lain-lain</option>
+                <option value="shopee" {{ 'selected' if prefill_channel == 'shopee' else '' }}>🛒 Shopee</option>
+                <option value="tiktok" {{ 'selected' if prefill_channel == 'tiktok' else '' }}>🎵 TikTok Shop</option>
+                <option value="walkin" {{ 'selected' if prefill_channel == 'walkin' else '' }}>🏪 Walk-in</option>
+                <option value="agent" {{ 'selected' if prefill_channel == 'agent' else '' }}>👥 Ejen</option>
+                <option value="online" {{ 'selected' if prefill_channel == 'online' else '' }}>💻 Online Lain</option>
+                <option value="other" {{ 'selected' if prefill_channel == 'other' else '' }}>📦 Lain-lain</option>
             </select>
         </div>
 
@@ -224,8 +224,14 @@
         document.getElementById('amount').focus();
     }
     
-    // Auto-focus on amount field when page loads
+    // Initialize page with pre-filled data
     document.addEventListener('DOMContentLoaded', function() {
+        // Set pre-filled transaction type if provided
+        {% if prefill_type %}
+        setTransactionType('{{ prefill_type }}');
+        {% endif %}
+        
+        // Auto-focus on amount field
         document.getElementById('amount').focus();
     });
 </script>

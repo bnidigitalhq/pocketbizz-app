@@ -51,7 +51,7 @@
                             <span>{{ "%.0f"|format(percentage) }}%</span>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-error-red h-2 rounded-full transition-all duration-300" style="width: {{ min(percentage, 100) }}%"></div>
+                            <div class="bg-error-red h-2 rounded-full transition-all duration-300" style="width: {% if percentage > 100 %}100{% else %}{{ percentage }}{% endif %}%"></div>
                         </div>
                     </div>
                 </div>
