@@ -10,10 +10,23 @@
             <h1 class="text-2xl font-bold text-gray-800">Laporan</h1>
             <p class="text-gray-600">{{ current_month }}</p>
         </div>
-        <button onclick="showExportModal()" class="px-4 py-2 bg-shopee-orange text-white rounded-lg hover:bg-red-600 transition-colors">
-            <i data-feather="download" class="w-4 h-4 inline mr-2"></i>
-            Export
-        </button>
+        <div class="flex space-x-2">
+            <a href="{{ url_for('export_pdf', month=current_month_num, year=current_year) }}" 
+               class="premium-button px-4 py-2 bg-error-red text-white rounded-lg hover:bg-red-600 transition-colors">
+                <i data-feather="file-text" class="w-4 h-4 inline mr-2"></i>
+                Export PDF
+            </a>
+            <a href="{{ url_for('print_report', month=current_month_num, year=current_year) }}" 
+               target="_blank"
+               class="premium-button px-4 py-2 bg-shopee-blue text-white rounded-lg hover:bg-blue-600 transition-colors">
+                <i data-feather="printer" class="w-4 h-4 inline mr-2"></i>
+                Print
+            </a>
+            <button onclick="showExportModal()" class="premium-button px-4 py-2 bg-shopee-orange text-white rounded-lg hover:bg-red-600 transition-colors">
+                <i data-feather="download" class="w-4 h-4 inline mr-2"></i>
+                Export CSV
+            </button>
+        </div>
     </div>
 
     <!-- Monthly Summary -->

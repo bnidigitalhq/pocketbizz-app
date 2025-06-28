@@ -4,6 +4,11 @@ import os
 from datetime import datetime, timedelta
 from flask import render_template, request, redirect, url_for, flash, jsonify, make_response
 from werkzeug.utils import secure_filename
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.units import inch
 from app import app, db
 from models import Transaction, BusinessSettings, Product, StockMovement, Agent, AgentOrder, ZakatCalculation
 
@@ -734,3 +739,186 @@ def api_agent_stats(agent_id):
         'months': ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 
                   'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dis']
     })
+
+# === PDF EXPORT FUNCTIONS ===
+
+def generate_transaction_report_pdf(start_date, end_date, format_type='monthly'):
+    """Generate PDF report for transactions"""
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.5*inch)
+    
+    # Get business settings
+    settings = BusinessSettings.query.first()
+    business_name = settings.business_name if settings else "Perniagaan Saya"
+    
+    # Styles
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        spaceAfter=30,
+        alignment=1,  # Center
+        textColor=colors.HexColor('#EE4D2D')
+    )
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=14,
+        spaceAfter=12,
+        textColor=colors.HexColor('#333333')
+    )
+    
+    # Story elements
+    story = []
+    
+    # Title
+    title = Paragraph(f"<b>{business_name}</b><br/>Laporan Transaksi", title_style)
+    story.append(title)
+    story.append(Spacer(1, 12))
+    
+    # Date range
+    date_range = Paragraph(f"<b>Tempoh:</b> {start_date.strftime('%d/%m/%Y')} - {end_date.strftime('%d/%m/%Y')}", styles['Normal'])
+    story.append(date_range)
+    story.append(Spacer(1, 20))
+    
+    # Get transactions
+    transactions = Transaction.query.filter(
+        Transaction.date >= start_date,
+        Transaction.date <= end_date
+    ).order_by(Transaction.date.desc()).all()
+    
+    # Summary calculations
+    total_income = sum(t.amount for t in transactions if t.type == 'income')
+    total_expense = sum(t.amount for t in transactions if t.type == 'expense')
+    net_profit = total_income - total_expense
+    
+    # Summary section
+    story.append(Paragraph("Ringkasan", heading_style))
+    
+    summary_data = [
+        ['Jumlah Pendapatan', f'RM {total_income:.2f}'],
+        ['Jumlah Perbelanjaan', f'RM {total_expense:.2f}'],
+        ['Keuntungan Bersih', f'RM {net_profit:.2f}']
+    ]
+    
+    summary_table = Table(summary_data, colWidths=[3*inch, 2*inch])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F5F5F5')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black)
+    ]))
+    
+    story.append(summary_table)
+    story.append(Spacer(1, 30))
+    
+    # Transactions table
+    story.append(Paragraph("Senarai Transaksi", heading_style))
+    
+    # Table headers
+    table_data = [
+        ['Tarikh', 'Jenis', 'Jumlah', 'Penerangan', 'Saluran']
+    ]
+    
+    # Add transaction rows
+    for transaction in transactions:
+        table_data.append([
+            transaction.date.strftime('%d/%m/%Y'),
+            'Pendapatan' if transaction.type == 'income' else 'Perbelanjaan',
+            f'RM {transaction.amount:.2f}',
+            transaction.description[:30] + '...' if len(transaction.description) > 30 else transaction.description,
+            transaction.channel.title()
+        ])
+    
+    # Create table
+    transactions_table = Table(table_data, colWidths=[1.2*inch, 1*inch, 1*inch, 2.5*inch, 1*inch])
+    transactions_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#EE4D2D')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('ALIGN', (2, 0), (2, -1), 'RIGHT'),  # Amount column
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')
+    ]))
+    
+    story.append(transactions_table)
+    
+    # Build PDF
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+@app.route('/export_pdf')
+def export_pdf():
+    """Export monthly report as PDF"""
+    # Get date range from request
+    month = int(request.args.get('month', datetime.now().month))
+    year = int(request.args.get('year', datetime.now().year))
+    
+    # Calculate start and end dates
+    start_date = datetime(year, month, 1)
+    if month == 12:
+        end_date = datetime(year + 1, 1, 1) - timedelta(days=1)
+    else:
+        end_date = datetime(year, month + 1, 1) - timedelta(days=1)
+    
+    # Generate PDF
+    pdf_buffer = generate_transaction_report_pdf(start_date, end_date)
+    
+    # Create response
+    response = make_response(pdf_buffer.getvalue())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=laporan-transaksi-{month:02d}-{year}.pdf'
+    
+    return response
+
+@app.route('/print_report')
+def print_report():
+    """Generate printable report view"""
+    # Get date range from request  
+    month = int(request.args.get('month', datetime.now().month))
+    year = int(request.args.get('year', datetime.now().year))
+    
+    # Calculate start and end dates
+    start_date = datetime(year, month, 1)
+    if month == 12:
+        end_date = datetime(year + 1, 1, 1) - timedelta(days=1)
+    else:
+        end_date = datetime(year, month + 1, 1) - timedelta(days=1)
+    
+    # Get transactions
+    transactions = Transaction.query.filter(
+        Transaction.date >= start_date,
+        Transaction.date <= end_date
+    ).order_by(Transaction.date.desc()).all()
+    
+    # Calculate summary
+    total_income = sum(t.amount for t in transactions if t.type == 'income')
+    total_expense = sum(t.amount for t in transactions if t.type == 'expense')
+    net_profit = total_income - total_expense
+    
+    # Get business settings
+    settings = BusinessSettings.query.first()
+    
+    return render_template('print_report.html', 
+                         transactions=transactions,
+                         total_income=total_income,
+                         total_expense=total_expense,
+                         net_profit=net_profit,
+                         start_date=start_date,
+                         end_date=end_date,
+                         settings=settings,
+                         month=month,
+                         year=year)
