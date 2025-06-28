@@ -3,7 +3,30 @@
 let currentImageFile = null;
 
 function openCamera() {
-    document.getElementById('cameraInput').click();
+    // Check if camera is supported
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        App.showNotification('Kamera tidak disokong pada peranti ini', 'error');
+        return;
+    }
+    
+    // Try to access camera first, then trigger file input
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+            // Stop the stream immediately - we just wanted to check permission
+            stream.getTracks().forEach(track => track.stop());
+            // Now trigger the camera input
+            document.getElementById('cameraInput').click();
+        })
+        .catch(function(error) {
+            console.error('Camera access error:', error);
+            if (error.name === 'NotAllowedError') {
+                App.showNotification('Akses kamera ditolak. Sila berikan kebenaran dalam tetapan browser.', 'error');
+            } else {
+                App.showNotification('Kamera tidak tersedia. Cuba pilih fail sebagai gantinya.', 'warning');
+            }
+            // Fallback to file selection
+            document.getElementById('fileInput').click();
+        });
 }
 
 function selectFile() {
@@ -68,13 +91,19 @@ async function processImage() {
     document.getElementById('processingSection').classList.remove('hidden');
     
     try {
-        // Initialize Tesseract worker
-        const worker = await Tesseract.createWorker();
+        // Check if Tesseract is available
+        if (typeof Tesseract === 'undefined') {
+            throw new Error('Tesseract.js not loaded');
+        }
+        
+        // Initialize Tesseract worker with proper options
+        const worker = await Tesseract.createWorker('eng', 1, {
+            logger: m => console.log(m) // Progress logging
+        });
         
         // Configure for better number recognition
         await worker.setParameters({
-            tessedit_char_whitelist: '0123456789.,/- ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
-            tessedit_pageseg_mode: Tesseract.PSM.AUTO
+            'tessedit_char_whitelist': '0123456789.,/- ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
         });
         
         // Process the image
@@ -90,9 +119,9 @@ async function processImage() {
         console.error('OCR Error:', error);
         App.showNotification('Ralat semasa memproses imej. Sila cuba lagi.', 'error');
         
-        // Hide processing section
+        // Hide processing section and show manual entry as fallback
         document.getElementById('processingSection').classList.add('hidden');
-        document.getElementById('previewSection').classList.remove('hidden');
+        showManualEntrySection();
     }
 }
 
@@ -202,6 +231,11 @@ function useExtractedData() {
 }
 
 function editManually() {
+    showManualEntrySection();
+}
+
+function skipOCRToManual() {
+    // Skip OCR processing and go directly to manual entry
     showManualEntrySection();
 }
 
