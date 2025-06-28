@@ -3,30 +3,41 @@
 let currentImageFile = null;
 
 function openCamera() {
-    // Check if camera is supported
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        App.showNotification('Kamera tidak disokong pada peranti ini', 'error');
+    // For mobile devices, directly trigger the camera input which has better support
+    if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        document.getElementById('cameraInput').click();
         return;
     }
     
-    // Try to access camera first, then trigger file input
-    navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function(stream) {
-            // Stop the stream immediately - we just wanted to check permission
-            stream.getTracks().forEach(track => track.stop());
-            // Now trigger the camera input
-            document.getElementById('cameraInput').click();
-        })
-        .catch(function(error) {
-            console.error('Camera access error:', error);
-            if (error.name === 'NotAllowedError') {
-                App.showNotification('Akses kamera ditolak. Sila berikan kebenaran dalam tetapan browser.', 'error');
-            } else {
-                App.showNotification('Kamera tidak tersedia. Cuba pilih fail sebagai gantinya.', 'warning');
-            }
-            // Fallback to file selection
-            document.getElementById('fileInput').click();
-        });
+    // For desktop, check camera availability first
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        App.showNotification('Kamera tidak disokong. Cuba pilih fail sebagai gantinya.', 'warning');
+        document.getElementById('fileInput').click();
+        return;
+    }
+    
+    // Check camera permission and availability
+    navigator.mediaDevices.getUserMedia({ 
+        video: { 
+            facingMode: 'environment' // Use back camera if available
+        } 
+    })
+    .then(function(stream) {
+        // Stop the stream immediately - we just wanted to check permission
+        stream.getTracks().forEach(track => track.stop());
+        // Now trigger the camera input
+        document.getElementById('cameraInput').click();
+    })
+    .catch(function(error) {
+        console.error('Camera access error:', error);
+        if (error.name === 'NotAllowedError') {
+            App.showNotification('Akses kamera ditolak. Sila berikan kebenaran dalam tetapan browser atau pilih fail.', 'warning');
+        } else {
+            App.showNotification('Kamera tidak tersedia. Menggunakan pemilihan fail sebagai gantinya.', 'info');
+        }
+        // Fallback to file selection
+        document.getElementById('fileInput').click();
+    });
 }
 
 function selectFile() {
@@ -56,15 +67,38 @@ function handleFileSelect(event) {
 function showImagePreview(file) {
     const reader = new FileReader();
     reader.onload = function(e) {
-        const previewSection = document.getElementById('previewSection');
-        const previewImage = document.getElementById('previewImage');
-        
-        previewImage.src = e.target.result;
-        previewSection.classList.remove('hidden');
-        
-        // Hide upload area
-        document.getElementById('uploadArea').style.display = 'none';
+        try {
+            const previewSection = document.getElementById('previewSection');
+            const previewImage = document.getElementById('previewImage');
+            
+            if (!previewSection || !previewImage) {
+                console.error('Preview elements not found');
+                App.showNotification('Ralat dalam paparan preview', 'error');
+                return;
+            }
+            
+            previewImage.src = e.target.result;
+            previewSection.classList.remove('hidden');
+            
+            // Hide upload area
+            const uploadArea = document.getElementById('uploadArea');
+            if (uploadArea) {
+                uploadArea.style.display = 'none';
+            }
+            
+            // Add success feedback
+            App.showNotification('Imej berjaya dimuat naik', 'success');
+            
+        } catch (error) {
+            console.error('Error in showImagePreview:', error);
+            App.showNotification('Ralat dalam memaparkan imej', 'error');
+        }
     };
+    
+    reader.onerror = function() {
+        App.showNotification('Ralat membaca fail imej', 'error');
+    };
+    
     reader.readAsDataURL(file);
 }
 
@@ -93,31 +127,46 @@ async function processImage() {
     try {
         // Check if Tesseract is available
         if (typeof Tesseract === 'undefined') {
-            throw new Error('Tesseract.js not loaded');
+            console.warn('Tesseract.js not available, using manual entry');
+            showManualEntrySection();
+            return;
         }
         
-        // Initialize Tesseract worker with proper options
-        const worker = await Tesseract.createWorker('eng', 1, {
-            logger: m => console.log(m) // Progress logging
+        // Create a more robust worker initialization
+        const worker = Tesseract.createWorker({
+            logger: m => {
+                if (m.status === 'recognizing text') {
+                    const progress = Math.round(m.progress * 100);
+                    document.getElementById('progressText').textContent = `Memproses... ${progress}%`;
+                }
+            }
         });
         
-        // Configure for better number recognition
+        // Initialize worker
+        await worker.load();
+        await worker.loadLanguage('eng');
+        await worker.initialize('eng');
+        
+        // Configure for better Malaysian receipt recognition
         await worker.setParameters({
-            'tessedit_char_whitelist': '0123456789.,/- ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+            'tessedit_char_whitelist': '0123456789.,RM /:-ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
         });
         
         // Process the image
         const { data: { text } } = await worker.recognize(currentImageFile);
         
-        // Terminate worker
+        // Terminate worker properly
         await worker.terminate();
         
-        // Process OCR results
-        processOCRResults(text);
+        if (text.trim()) {
+            processOCRResults(text);
+        } else {
+            throw new Error('No text detected');
+        }
         
     } catch (error) {
         console.error('OCR Error:', error);
-        App.showNotification('Ralat semasa memproses imej. Sila cuba lagi.', 'error');
+        App.showNotification('Imej tidak dapat dibaca dengan baik. Sila masukkan data secara manual.', 'warning');
         
         // Hide processing section and show manual entry as fallback
         document.getElementById('processingSection').classList.add('hidden');
@@ -235,21 +284,61 @@ function editManually() {
 }
 
 function skipOCRToManual() {
+    App.showNotification('Beralih ke input manual', 'info');
     // Skip OCR processing and go directly to manual entry
-    showManualEntrySection();
+    setTimeout(() => {
+        showManualEntrySection();
+    }, 300);
 }
 
 function showManualEntrySection() {
-    // Hide OCR sections
-    document.getElementById('previewSection').classList.add('hidden');
-    document.getElementById('processingSection').classList.add('hidden');
-    document.getElementById('resultsSection').classList.add('hidden');
-    
-    // Show manual entry form
-    document.getElementById('manualEntrySection').classList.remove('hidden');
-    
-    // Focus on amount field
-    document.getElementById('manualAmount').focus();
+    try {
+        // Hide OCR sections safely
+        const sectionsToHide = ['previewSection', 'processingSection', 'resultsSection'];
+        sectionsToHide.forEach(sectionId => {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.add('hidden');
+            }
+        });
+        
+        // Check if manual entry section exists on this page
+        const manualSection = document.getElementById('manualEntrySection');
+        
+        if (manualSection) {
+            // Show manual entry form on the same page
+            manualSection.classList.remove('hidden');
+            
+            // Focus on amount field if it exists
+            const amountField = document.getElementById('manualAmount');
+            if (amountField) {
+                setTimeout(() => amountField.focus(), 100);
+            }
+        } else {
+            // Redirect to add transaction page
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Store image reference if available
+            if (currentImageFile) {
+                try {
+                    sessionStorage.setItem('hasReceiptImage', 'true');
+                    sessionStorage.setItem('receiptTimestamp', Date.now().toString());
+                } catch (error) {
+                    console.warn('Could not store receipt reference:', error);
+                }
+            }
+            
+            window.location.href = `/add_transaction?date=${today}&source=receipt`;
+        }
+        
+    } catch (error) {
+        console.error('Error in showManualEntrySection:', error);
+        App.showNotification('Mengalihkan ke input manual...', 'info');
+        // Fallback redirect
+        setTimeout(() => {
+            window.location.href = '/add_transaction';
+        }, 500);
+    }
 }
 
 // Drag and drop functionality
