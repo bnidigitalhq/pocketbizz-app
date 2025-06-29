@@ -10,7 +10,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.units import inch
 from app import app, db
-from models import Transaction, BusinessSettings, Product, StockMovement, Agent, AgentOrder, ZakatCalculation
+from models import Transaction, BusinessSettings, Product, StockMovement, Agent, AgentOrder, ZakatCalculation, Supplier, ProductVariant, PurchaseOrder, PurchaseOrderItem
 
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'csv', 'png', 'jpg', 'jpeg', 'gif', 'pdf'}
@@ -1616,3 +1616,151 @@ def admin_optimize_system():
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# ===== SUPPLIER MANAGEMENT ROUTES =====
+
+@app.route('/suppliers')
+def suppliers():
+    """Supplier management page"""
+    suppliers = Supplier.query.all()
+    active_suppliers = Supplier.query.filter_by(status='active').count()
+    pending_orders = PurchaseOrder.query.filter_by(status='pending').count()
+    
+    # Calculate average rating
+    ratings = [s.rating for s in suppliers if s.rating > 0]
+    avg_rating = round(sum(ratings) / len(ratings), 1) if ratings else 0.0
+    
+    return render_template('suppliers.html',
+                         suppliers=suppliers,
+                         active_suppliers=active_suppliers,
+                         pending_orders=pending_orders,
+                         avg_rating=avg_rating)
+
+@app.route('/add_supplier', methods=['POST'])
+def add_supplier():
+    """Add new supplier"""
+    try:
+        supplier = Supplier(
+            name=request.form['name'],
+            company_name=request.form.get('company_name'),
+            contact_person=request.form.get('contact_person'),
+            phone=request.form.get('phone'),
+            email=request.form.get('email'),
+            address=request.form.get('address'),
+            payment_terms=request.form.get('payment_terms', 'cash'),
+            tax_id=request.form.get('tax_id'),
+            notes=request.form.get('notes'),
+            status='active'
+        )
+        
+        db.session.add(supplier)
+        db.session.commit()
+        
+        flash('Pembekal berjaya ditambah!', 'success')
+        return redirect(url_for('suppliers'))
+        
+    except Exception as e:
+        flash(f'Ralat: {str(e)}', 'error')
+        return redirect(url_for('suppliers'))
+
+# ===== PRODUCT VARIANT MANAGEMENT ROUTES =====
+
+@app.route('/product-variants')
+def product_variants():
+    """Product variants management page"""
+    product_id = request.args.get('product_id')
+    
+    products = Product.query.filter_by(is_active=True).all()
+    selected_product = None
+    variants = []
+    
+    if product_id:
+        selected_product = Product.query.get(product_id)
+        if selected_product:
+            variants = ProductVariant.query.filter_by(product_id=product_id, is_active=True).all()
+    
+    return render_template('product_variants.html',
+                         products=products,
+                         selected_product=selected_product,
+                         variants=variants)
+
+@app.route('/add_product_variant', methods=['POST'])
+def add_product_variant():
+    """Add new product variant"""
+    try:
+        product_id = request.form['product_id']
+        product = Product.query.get(product_id)
+        
+        if not product:
+            flash('Produk tidak dijumpai!', 'error')
+            return redirect(url_for('product_variants'))
+        
+        # Auto-generate SKU if not provided
+        sku = request.form.get('sku')
+        if not sku:
+            variant_name = request.form['variant_name']
+            # Simple SKU generation: Parent SKU + first letters of variant
+            prefix = variant_name[:3].upper().replace(' ', '')
+            existing_variants = ProductVariant.query.filter_by(product_id=product_id).count()
+            sku = f"{product.sku}-{prefix}{existing_variants + 1:03d}"
+        
+        variant = ProductVariant(
+            product_id=product_id,
+            variant_name=request.form['variant_name'],
+            sku=sku,
+            color=request.form.get('color'),
+            size=request.form.get('size'),
+            weight=float(request.form['weight']) if request.form.get('weight') else None,
+            material=request.form.get('material'),
+            cost_price=float(request.form['cost_price']),
+            selling_price=float(request.form['selling_price']),
+            current_stock=int(request.form.get('current_stock', 0)),
+            minimum_stock=int(request.form.get('minimum_stock', 5)),
+            barcode=request.form.get('barcode')
+        )
+        
+        db.session.add(variant)
+        
+        # Enable variants for the parent product if not already enabled
+        if not product.has_variants:
+            product.has_variants = True
+        
+        db.session.commit()
+        
+        # Add initial stock movement if stock > 0
+        if variant.current_stock > 0:
+            stock_movement = StockMovement(
+                product_id=product_id,
+                movement_type='in',
+                quantity=variant.current_stock,
+                reference_type='initial_stock',
+                notes=f'Stok awal varian: {variant.variant_name}'
+            )
+            db.session.add(stock_movement)
+            db.session.commit()
+        
+        flash('Varian produk berjaya ditambah!', 'success')
+        return redirect(url_for('product_variants', product_id=product_id))
+        
+    except Exception as e:
+        flash(f'Ralat: {str(e)}', 'error')
+        return redirect(url_for('product_variants'))
+
+@app.route('/api/products/<int:product_id>/enable-variants', methods=['POST'])
+def enable_product_variants(product_id):
+    """Enable variants for a product"""
+    try:
+        product = Product.query.get(product_id)
+        if not product:
+            return jsonify({'success': False, 'message': 'Produk tidak dijumpai'})
+        
+        product.has_variants = True
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Varian telah diaktifkan untuk {product.name}'
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
