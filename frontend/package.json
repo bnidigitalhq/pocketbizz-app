@@ -1,0 +1,22 @@
+{
+  "name": "pocketbizz-frontend",
+  "version": "1.0.0",
+  "description": "PocketBizz Frontend for Vercel Deployment",
+  "main": "index.html",
+  "scripts": {
+    "build": "npm run copy-assets && npm run generate-manifest",
+    "copy-assets": "cp -r ../static/* ./static/ && cp -r ../templates/* ./",
+    "generate-manifest": "node generate-manifest.js",
+    "dev": "serve public",
+    "preview": "serve dist"
+  },
+  "dependencies": {
+    "serve": "^14.2.1"
+  },
+  "devDependencies": {
+    "@vercel/static": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
