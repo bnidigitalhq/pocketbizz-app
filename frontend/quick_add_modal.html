@@ -1,0 +1,281 @@
+<!-- Quick Add Transaction Modal -->
+<div id="quickAddModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-md mx-auto shadow-2xl transform transition-all duration-300 scale-95 opacity-0" id="modalContent">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-100">
+            <h3 class="text-xl font-bold text-gray-800">Tambah Transaksi Pantas</h3>
+            <button onclick="closeQuickAddModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i data-feather="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <!-- Transaction Type Toggle -->
+        <div class="p-6 pb-0">
+            <div class="flex bg-gray-100 rounded-xl p-1 mb-6">
+                <button id="incomeToggle" onclick="setTransactionType('income')" class="flex-1 py-3 px-4 rounded-lg transition-all duration-200 font-semibold text-sm bg-green-500 text-white">
+                    <i data-feather="trending-up" class="w-4 h-4 inline mr-2"></i>
+                    Pendapatan
+                </button>
+                <button id="expenseToggle" onclick="setTransactionType('expense')" class="flex-1 py-3 px-4 rounded-lg transition-all duration-200 font-semibold text-sm text-gray-600 hover:text-gray-800">
+                    <i data-feather="trending-down" class="w-4 h-4 inline mr-2"></i>
+                    Perbelanjaan
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Form -->
+        <form id="quickAddForm" onsubmit="submitQuickTransaction(event)" class="p-6 pt-0">
+            <input type="hidden" id="quickTransactionType" value="income">
+            
+            <!-- Amount Input -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah (RM)</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">RM</span>
+                    <input type="number" 
+                           id="quickAmount" 
+                           step="0.01" 
+                           min="0"
+                           required
+                           class="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-lg font-semibold text-gray-800"
+                           placeholder="0.00"
+                           autocomplete="off">
+                </div>
+            </div>
+
+            <!-- Description Input -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan</label>
+                <input type="text" 
+                       id="quickDescription" 
+                       required
+                       class="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-800"
+                       placeholder="Contoh: Makan tengahari, Jualan produk A..."
+                       autocomplete="off">
+            </div>
+
+            <!-- Channel Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Saluran</label>
+                <div id="incomeChannels" class="grid grid-cols-2 gap-3">
+                    <button type="button" onclick="selectChannel('shopee')" data-channel="shopee" class="channel-btn p-3 border border-gray-200 rounded-xl text-center transition-all duration-200 hover:border-orange-300 hover:bg-orange-50">
+                        <span class="text-2xl mb-1 block">🛒</span>
+                        <span class="text-sm font-medium text-gray-700">Shopee</span>
+                    </button>
+                    <button type="button" onclick="selectChannel('tiktok')" data-channel="tiktok" class="channel-btn p-3 border border-gray-200 rounded-xl text-center transition-all duration-200 hover:border-purple-300 hover:bg-purple-50">
+                        <span class="text-2xl mb-1 block">🎵</span>
+                        <span class="text-sm font-medium text-gray-700">TikTok</span>
+                    </button>
+                    <button type="button" onclick="selectChannel('walkin')" data-channel="walkin" class="channel-btn p-3 border border-gray-200 rounded-xl text-center transition-all duration-200 hover:border-blue-300 hover:bg-blue-50">
+                        <span class="text-2xl mb-1 block">🏪</span>
+                        <span class="text-sm font-medium text-gray-700">Walk-in</span>
+                    </button>
+                    <button type="button" onclick="selectChannel('agent')" data-channel="agent" class="channel-btn p-3 border border-gray-200 rounded-xl text-center transition-all duration-200 hover:border-green-300 hover:bg-green-50">
+                        <span class="text-2xl mb-1 block">👥</span>
+                        <span class="text-sm font-medium text-gray-700">Agent</span>
+                    </button>
+                </div>
+                <div id="expenseChannels" class="grid grid-cols-2 gap-3 hidden">
+                    <button type="button" onclick="selectChannel('supplier')" data-channel="supplier" class="channel-btn p-3 border border-gray-200 rounded-xl text-center transition-all duration-200 hover:border-blue-300 hover:bg-blue-50">
+                        <span class="text-2xl mb-1 block">🏭</span>
+                        <span class="text-sm font-medium text-gray-700">Pembekal</span>
+                    </button>
+                    <button type="button" onclick="selectChannel('operational')" data-channel="operational" class="channel-btn p-3 border border-gray-200 rounded-xl text-center transition-all duration-200 hover:border-gray-300 hover:bg-gray-50">
+                        <span class="text-2xl mb-1 block">⚙️</span>
+                        <span class="text-sm font-medium text-gray-700">Operasi</span>
+                    </button>
+                    <button type="button" onclick="selectChannel('marketing')" data-channel="marketing" class="channel-btn p-3 border border-gray-200 rounded-xl text-center transition-all duration-200 hover:border-purple-300 hover:bg-purple-50">
+                        <span class="text-2xl mb-1 block">📢</span>
+                        <span class="text-sm font-medium text-gray-700">Marketing</span>
+                    </button>
+                    <button type="button" onclick="selectChannel('office')" data-channel="office" class="channel-btn p-3 border border-gray-200 rounded-xl text-center transition-all duration-200 hover:border-green-300 hover:bg-green-50">
+                        <span class="text-2xl mb-1 block">🏢</span>
+                        <span class="text-sm font-medium text-gray-700">Pejabat</span>
+                    </button>
+                </div>
+                <input type="hidden" id="quickChannel" value="walkin">
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex space-x-3">
+                <button type="button" onclick="closeQuickAddModal()" class="flex-1 py-4 px-6 border border-gray-200 rounded-xl text-gray-600 font-semibold hover:bg-gray-50 transition-colors">
+                    Batal
+                </button>
+                <button type="submit" class="flex-1 py-4 px-6 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                    <i data-feather="plus" class="w-4 h-4 inline mr-2"></i>
+                    Tambah
+                </button>
+            </div>
+
+            <!-- Advanced Options Link -->
+            <div class="mt-4 text-center">
+                <a href="/add-transaction" class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    Pilihan lanjutan (upload resit, kategori, dll.)
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let selectedChannel = 'walkin';
+
+function openQuickAddModal(type = 'income') {
+    const modal = document.getElementById('quickAddModal');
+    const content = document.getElementById('modalContent');
+    
+    // Reset form
+    document.getElementById('quickAddForm').reset();
+    document.getElementById('quickAmount').focus();
+    
+    // Set transaction type
+    setTransactionType(type);
+    
+    // Show modal with animation
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+    }, 10);
+    
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+}
+
+function closeQuickAddModal() {
+    const modal = document.getElementById('quickAddModal');
+    const content = document.getElementById('modalContent');
+    
+    // Hide with animation
+    content.classList.remove('scale-100', 'opacity-100');
+    content.classList.add('scale-95', 'opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }, 300);
+}
+
+function setTransactionType(type) {
+    document.getElementById('quickTransactionType').value = type;
+    
+    const incomeBtn = document.getElementById('incomeToggle');
+    const expenseBtn = document.getElementById('expenseToggle');
+    const incomeChannels = document.getElementById('incomeChannels');
+    const expenseChannels = document.getElementById('expenseChannels');
+    const descriptionInput = document.getElementById('quickDescription');
+    
+    if (type === 'income') {
+        // Update button styles
+        incomeBtn.className = 'flex-1 py-3 px-4 rounded-lg transition-all duration-200 font-semibold text-sm bg-green-500 text-white';
+        expenseBtn.className = 'flex-1 py-3 px-4 rounded-lg transition-all duration-200 font-semibold text-sm text-gray-600 hover:text-gray-800';
+        
+        // Show income channels, hide expense channels
+        incomeChannels.classList.remove('hidden');
+        expenseChannels.classList.add('hidden');
+        
+        // Update placeholder text for income
+        descriptionInput.placeholder = 'Contoh: Jualan produk A, Commission dari agent...';
+        
+        // Set default channel for income
+        selectChannel('walkin');
+        
+    } else {
+        // Update button styles
+        expenseBtn.className = 'flex-1 py-3 px-4 rounded-lg transition-all duration-200 font-semibold text-sm bg-red-500 text-white';
+        incomeBtn.className = 'flex-1 py-3 px-4 rounded-lg transition-all duration-200 font-semibold text-sm text-gray-600 hover:text-gray-800';
+        
+        // Show expense channels, hide income channels
+        console.log('Setting expense mode - hiding income channels, showing expense channels');
+        incomeChannels.classList.add('hidden');
+        expenseChannels.classList.remove('hidden');
+        
+        // Update placeholder text for expense
+        descriptionInput.placeholder = 'Contoh: Beli stock, Sewa kedai, Internet bill...';
+        
+        // Set default channel for expense
+        selectChannel('operational');
+    }
+}
+
+function selectChannel(channel) {
+    selectedChannel = channel;
+    document.getElementById('quickChannel').value = channel;
+    
+    // Update visual selection
+    document.querySelectorAll('.channel-btn').forEach(btn => {
+        btn.classList.remove('border-red-500', 'bg-red-50', 'ring-2', 'ring-red-200');
+        btn.classList.add('border-gray-200');
+    });
+    
+    const selectedBtn = document.querySelector(`[data-channel="${channel}"]`);
+    if (selectedBtn) {
+        selectedBtn.classList.remove('border-gray-200');
+        selectedBtn.classList.add('border-red-500', 'bg-red-50', 'ring-2', 'ring-red-200');
+    } else {
+        console.log(`Channel button for ${channel} not found in current view`);
+    }
+}
+
+function submitQuickTransaction(event) {
+    event.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('type', document.getElementById('quickTransactionType').value);
+    formData.append('amount', document.getElementById('quickAmount').value);
+    formData.append('description', document.getElementById('quickDescription').value);
+    formData.append('channel', document.getElementById('quickChannel').value);
+    formData.append('category', 'Lain-lain'); // Default category for quick add
+    
+    // Show loading state
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i data-feather="loader" class="w-4 h-4 inline mr-2 animate-spin"></i>Menyimpan...';
+    submitBtn.disabled = true;
+    
+    fetch('/add-transaction', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.text())
+    .then(html => {
+        // Show success notification
+        showNotification('Transaksi berjaya ditambah!', 'success');
+        
+        // Close modal
+        closeQuickAddModal();
+        
+        // Reload page to show updated data
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Ralat menyimpan transaksi', 'error');
+        
+        // Restore button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+// Close modal when clicking outside
+document.getElementById('quickAddModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeQuickAddModal();
+    }
+});
+
+// Close modal with ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !document.getElementById('quickAddModal').classList.contains('hidden')) {
+        closeQuickAddModal();
+    }
+});
+
+// Initialize default channel selection
+document.addEventListener('DOMContentLoaded', function() {
+    selectChannel('walkin');
+});
+</script>

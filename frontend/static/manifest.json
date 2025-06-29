@@ -1,0 +1,33 @@
+{
+  "name": "PocketBizz - SME Accounting App",
+  "short_name": "PocketBizz",
+  "description": "Mobile-first accounting app untuk SME Malaysia - record transactions dalam 10 saat",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ee4d2d",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "ms-MY",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    {
+      "src": "/static/icons/pocketbizz-app-icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/pocketbizz-app-icon.svg",
+      "sizes": "512x512", 
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/pocketbizz-app-icon.svg",
+      "sizes": "144x144",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

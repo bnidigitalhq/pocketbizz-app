@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Transaksi - {{ settings.business_name if settings else 'Perniagaan Saya' }}</title>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { margin: 0; }
+            .page-break { page-break-before: always; }
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #333;
+            line-height: 1.4;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #EE4D2D;
+        }
+        
+        .business-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #EE4D2D;
+            margin-bottom: 10px;
+        }
+        
+        .report-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .date-range {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .summary {
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .summary h2 {
+            margin-top: 0;
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .summary-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .summary-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .income { color: #28a745; }
+        .expense { color: #dc3545; }
+        .profit { color: #007bff; }
+        
+        .transactions {
+            margin-top: 30px;
+        }
+        
+        .transactions h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+            font-size: 12px;
+        }
+        
+        th {
+            background-color: #EE4D2D;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .amount {
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        .income-row { background-color: #e8f5e8; }
+        .expense-row { background-color: #ffeaea; }
+        
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #EE4D2D;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .print-button:hover {
+            background: #d63821;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            table {
+                font-size: 10px;
+            }
+            
+            th, td {
+                padding: 6px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Print Button -->
+    <button class="print-button no-print" onclick="window.print()">
+        🖨️ Print Laporan
+    </button>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="business-name">
+            {{ settings.business_name if settings else 'Perniagaan Saya' }}
+        </div>
+        <div class="report-title">Laporan Transaksi Bulanan</div>
+        <div class="date-range">
+            {{ start_date.strftime('%d/%m/%Y') }} - {{ end_date.strftime('%d/%m/%Y') }}
+        </div>
+    </div>
+
+    <!-- Summary Section -->
+    <div class="summary">
+        <h2>📊 Ringkasan Kewangan</h2>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="summary-label">Jumlah Pendapatan</div>
+                <div class="summary-value income">RM {{ "%.2f"|format(total_income) }}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Jumlah Perbelanjaan</div>
+                <div class="summary-value expense">RM {{ "%.2f"|format(total_expense) }}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Keuntungan Bersih</div>
+                <div class="summary-value profit">RM {{ "%.2f"|format(net_profit) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Section -->
+    <div class="transactions">
+        <h2>📋 Senarai Transaksi ({{ transactions|length }} rekod)</h2>
+        
+        {% if transactions %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Tarikh</th>
+                    <th>Jenis</th>
+                    <th>Jumlah (RM)</th>
+                    <th>Penerangan</th>
+                    <th>Saluran</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                <tr class="{{ 'income-row' if transaction.type == 'income' else 'expense-row' }}">
+                    <td>{{ transaction.date.strftime('%d/%m/%Y') }}</td>
+                    <td>
+                        {% if transaction.type == 'income' %}
+                            <span style="color: #28a745;">💰 Pendapatan</span>
+                        {% else %}
+                            <span style="color: #dc3545;">💸 Perbelanjaan</span>
+                        {% endif %}
+                    </td>
+                    <td class="amount">{{ "%.2f"|format(transaction.amount) }}</td>
+                    <td>{{ transaction.description }}</td>
+                    <td>
+                        {% if transaction.channel == 'shopee' %}
+                            🛒 Shopee
+                        {% elif transaction.channel == 'tiktok' %}
+                            🎵 TikTok
+                        {% elif transaction.channel == 'walkin' %}
+                            🚶 Walk-in
+                        {% elif transaction.channel == 'agent' %}
+                            👥 Ejen
+                        {% else %}
+                            {{ transaction.channel.title() }}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align: center; padding: 40px; color: #666;">
+            <p>📭 Tiada transaksi untuk tempoh ini</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p id="generated-time">Laporan dijana pada: --</p>
+        <p>{{ settings.business_name if settings else 'Perniagaan Saya' }} - Sistem Perakaunan SME</p>
+    </div>
+
+    <script>
+        // Auto-print when page loads (optional)
+        // window.onload = function() {
+        //     window.print();
+        // }
+        
+        // Add current date/time to footer
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('ms-MY') + ' ' + now.toLocaleTimeString('ms-MY', {hour12: false});
+            const footerDate = document.querySelector('.footer p');
+            if (footerDate) {
+                footerDate.textContent = `Laporan dijana pada: ${dateStr}`;
+            }
+        });
+    </script>
+</body>
+</html>

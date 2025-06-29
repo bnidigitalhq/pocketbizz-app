@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
+  <!-- Shield with Chart Icon -->
+  <defs>
+    <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f97316;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Shield Shape -->
+  <path d="M25 25 L35 15 L55 15 L65 25 L65 55 C65 65 55 75 45 75 C35 75 25 65 25 55 Z" 
+        fill="url(#shieldGradient)" stroke="none"/>
+  
+  <!-- Chart Bars Inside Shield -->
+  <rect x="32" y="50" width="6" height="15" fill="white"/>
+  <rect x="40" y="45" width="6" height="20" fill="white"/>
+  <rect x="48" y="40" width="6" height="25" fill="white"/>
+  <rect x="56" y="35" width="6" height="30" fill="white"/>
+  
+  <!-- PocketBizz Text -->
+  <text x="80" y="45" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="600" fill="#1e40af">Pocket</text>
+  <text x="220" y="45" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="600" fill="#f97316">Bizz</text>
+  
+  <!-- Tagline -->
+  <text x="80" y="70" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="400" fill="#6b7280">Business On the Go</text>
+</svg>

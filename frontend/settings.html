@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Tetapan - SME Accounting{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Tetapan Perniagaan</h1>
+            <p class="text-gray-600">Konfigurasi untuk perniagaan anda</p>
+        </div>
+        <a href="{{ url_for('index') }}" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+            <i data-feather="arrow-left" class="w-5 h-5 text-gray-600"></i>
+        </a>
+    </div>
+
+    <!-- Settings Form -->
+    <form method="POST" action="{{ url_for('update_settings') }}" class="space-y-6">
+        <!-- Business Information -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i data-feather="briefcase" class="w-5 h-5 text-shopee-orange mr-2"></i>
+                Maklumat Perniagaan
+            </h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="business_name" class="block text-sm font-medium text-gray-700 mb-2">
+                        Nama Perniagaan
+                    </label>
+                    <input type="text" 
+                           id="business_name" 
+                           name="business_name" 
+                           value="{{ settings.business_name or '' }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-shopee-orange focus:border-shopee-orange"
+                           placeholder="Masukkan nama perniagaan"
+                           required>
+                </div>
+                
+                <div>
+                    <label for="welcome_name" class="block text-sm font-medium text-gray-700 mb-2">
+                        Nama Untuk Welcome Badge
+                    </label>
+                    <input type="text" 
+                           id="welcome_name" 
+                           name="welcome_name" 
+                           value="{{ settings.welcome_name or '' }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-shopee-orange focus:border-shopee-orange"
+                           placeholder="e.g. Ahmad, Sarah, Boss">
+                    <p class="text-sm text-gray-500 mt-1">
+                        Nama yang akan dipaparkan di welcome badge dashboard
+                    </p>
+                </div>
+                
+                <div>
+                    <label for="default_currency" class="block text-sm font-medium text-gray-700 mb-2">
+                        Mata Wang
+                    </label>
+                    <select id="default_currency" 
+                            name="default_currency" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-shopee-orange focus:border-shopee-orange">
+                        <option value="RM" {{ 'selected' if settings.default_currency == 'RM' else '' }}>RM (Ringgit Malaysia)</option>
+                        <option value="SGD" {{ 'selected' if settings.default_currency == 'SGD' else '' }}>SGD (Singapore Dollar)</option>
+                        <option value="USD" {{ 'selected' if settings.default_currency == 'USD' else '' }}>USD (US Dollar)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Limits -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i data-feather="alert-triangle" class="w-5 h-5 text-warning-yellow mr-2"></i>
+                Had Perbelanjaan
+            </h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="monthly_expense_limit" class="block text-sm font-medium text-gray-700 mb-2">
+                        Had Perbelanjaan Bulanan ({{ settings.default_currency or 'RM' }})
+                    </label>
+                    <input type="number" 
+                           id="monthly_expense_limit" 
+                           name="monthly_expense_limit" 
+                           value="{{ settings.monthly_expense_limit or 5000 }}"
+                           step="0.01"
+                           min="0"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-shopee-orange focus:border-shopee-orange"
+                           placeholder="5000.00"
+                           required>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Had harian: {{ "%.2f"|format((settings.monthly_expense_limit or 5000) / 30) }} {{ settings.default_currency or 'RM' }}
+                    </p>
+                </div>
+                
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div class="flex items-start">
+                        <i data-feather="info" class="w-5 h-5 text-yellow-600 mr-3 mt-0.5"></i>
+                        <div>
+                            <h3 class="text-sm font-medium text-yellow-800">Makluman Had Perbelanjaan</h3>
+                            <p class="text-sm text-yellow-700 mt-1">
+                                Anda akan menerima amaran apabila perbelanjaan harian mencapai 80% dari had yang ditetapkan.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- App Preferences -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i data-feather="smartphone" class="w-5 h-5 text-shopee-blue mr-2"></i>
+                Keutamaan Aplikasi
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-medium text-gray-700">Mod Gelap</h3>
+                        <p class="text-sm text-gray-500">Automatik bertukar mengikut tetapan sistem</p>
+                    </div>
+                    <button type="button" 
+                            onclick="App.toggleDarkMode()" 
+                            class="bg-gray-200 relative inline-flex h-6 w-11 rounded-full border-2 border-transparent transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shopee-orange"
+                            id="darkModeToggle">
+                        <span class="translate-x-0 pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200"></span>
+                    </button>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-medium text-gray-700">Notifikasi Push</h3>
+                        <p class="text-sm text-gray-500">Terima peringatan untuk had perbelanjaan</p>
+                    </div>
+                    <button type="button" 
+                            class="bg-shopee-orange relative inline-flex h-6 w-11 rounded-full border-2 border-transparent transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-shopee-orange">
+                        <span class="translate-x-5 pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="flex space-x-4">
+            <button type="submit" 
+                    class="flex-1 bg-shopee-orange hover:bg-shopee-orange/90 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center">
+                <i data-feather="save" class="w-5 h-5 mr-2"></i>
+                Simpan Tetapan
+            </button>
+            
+            <a href="{{ url_for('index') }}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-3 px-6 rounded-lg transition-colors flex items-center justify-center">
+                <i data-feather="x" class="w-5 h-5 mr-2"></i>
+                Batal
+            </a>
+        </div>
+    </form>
+
+    <!-- Data Management -->
+    <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <i data-feather="database" class="w-5 h-5 text-error-red mr-2"></i>
+            Pengurusan Data
+        </h2>
+        
+        <div class="space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-medium text-gray-700">Eksport Data</h3>
+                    <p class="text-sm text-gray-500">Muat turun semua data transaksi dalam format CSV</p>
+                </div>
+                <a href="{{ url_for('export_csv') }}" 
+                   class="bg-success-green hover:bg-success-green/90 text-white px-4 py-2 rounded-lg transition-colors flex items-center">
+                    <i data-feather="download" class="w-4 h-4 mr-2"></i>
+                    Eksport
+                </a>
+            </div>
+            
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <i data-feather="alert-triangle" class="w-5 h-5 text-red-600 mr-3 mt-0.5"></i>
+                    <div>
+                        <h3 class="text-sm font-medium text-red-800">Zon Bahaya</h3>
+                        <p class="text-sm text-red-700 mt-1">
+                            Tindakan ini akan memadamkan semua data transaksi secara kekal. Pastikan anda telah membuat sandaran terlebih dahulu.
+                        </p>
+                        <button type="button" 
+                                onclick="confirmDataReset()" 
+                                class="mt-3 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                            Reset Semua Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDataReset() {
+    if (confirm('Adakah anda pasti ingin memadamkan semua data? Tindakan ini tidak boleh dibatalkan.')) {
+        if (confirm('Ini adalah amaran terakhir. Semua transaksi akan dipadamkan secara kekal.')) {
+            // TODO: Implement data reset functionality
+            App.showNotification('Fungsi reset akan dilaksanakan kemudian', 'info');
+        }
+    }
+}
+</script>
+{% endblock %}

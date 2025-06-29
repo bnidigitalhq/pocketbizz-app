@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Order Ejen{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 pb-20">
+    <!-- Header -->
+    <div class="flex items-center mb-6">
+        <a href="{{ url_for('agents') }}" class="mr-4 text-gray-600 hover:text-shopee-orange">
+            <i data-feather="arrow-left" class="w-6 h-6"></i>
+        </a>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">📋 Submit Order Baru</h1>
+            <p class="text-gray-600">Hantar order untuk kelulusan</p>
+        </div>
+    </div>
+
+    <!-- Submit Order Form -->
+    <div class="glass-card rounded-xl p-6">
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            <!-- Agent Selection -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Pilih Ejen *
+                </label>
+                <select name="agent_id" required 
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-shopee-orange">
+                    <option value="">Pilih ejen...</option>
+                    {% for agent in agents %}
+                    <option value="{{ agent.id }}">{{ agent.name }} (Komisen: {{ agent.commission_rate }}%)</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Order Number -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Nombor Order *
+                    </label>
+                    <input type="text" name="order_number" required 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-shopee-orange"
+                           placeholder="ORD-001">
+                </div>
+
+                <!-- Total Amount -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Jumlah Order (RM) *
+                    </label>
+                    <input type="number" name="total_amount" step="0.01" min="0" required 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-shopee-orange"
+                           placeholder="0.00" oninput="calculateCommission()">
+                </div>
+
+                <!-- Customer Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Nama Pelanggan
+                    </label>
+                    <input type="text" name="customer_name" 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-shopee-orange"
+                           placeholder="Nama pelanggan">
+                </div>
+
+                <!-- Customer Phone -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Telefon Pelanggan
+                    </label>
+                    <input type="tel" name="customer_phone" 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-shopee-orange"
+                           placeholder="013-1234567">
+                </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Kaedah Pembayaran *
+                </label>
+                <select name="payment_method" required 
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-shopee-orange">
+                    <option value="">Pilih kaedah...</option>
+                    <option value="bank_transfer">Transfer Bank</option>
+                    <option value="cash">Tunai</option>
+                    <option value="ewallet">E-Wallet</option>
+                </select>
+            </div>
+
+            <!-- Payment Proof -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Bukti Pembayaran
+                </label>
+                <input type="file" name="payment_proof" accept="image/*" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-shopee-orange">
+                <p class="text-xs text-gray-500 mt-1">Upload gambar slip/screenshot pembayaran</p>
+            </div>
+
+            <!-- Commission Display -->
+            <div id="commissionDisplay" class="bg-blue-50 border border-blue-200 rounded-lg p-4" style="display: none;">
+                <div class="flex items-center">
+                    <i data-feather="percent" class="w-5 h-5 text-blue-500 mr-2"></i>
+                    <div>
+                        <p class="text-sm font-medium text-blue-800">Komisen Ejen</p>
+                        <p class="text-lg font-bold text-blue-600" id="commissionAmount">RM 0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Nota Tambahan
+                </label>
+                <textarea name="notes" rows="3" 
+                          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-shopee-orange"
+                          placeholder="Maklumat tambahan tentang order ini..."></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex space-x-4 pt-4">
+                <a href="{{ url_for('agents') }}" 
+                   class="flex-1 text-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                    Batal
+                </a>
+                <button type="submit" 
+                        class="flex-1 premium-button bg-shopee-orange text-white px-6 py-3 rounded-lg hover:bg-shopee-orange/90 transition-colors">
+                    <i data-feather="send" class="w-4 h-4 mr-2"></i>
+                    Submit Order
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function calculateCommission() {
+    const totalAmount = parseFloat(document.querySelector('input[name="total_amount"]').value) || 0;
+    const agentSelect = document.querySelector('select[name="agent_id"]');
+    const selectedOption = agentSelect.options[agentSelect.selectedIndex];
+    
+    if (totalAmount > 0 && selectedOption.value) {
+        // Extract commission rate from option text
+        const commissionText = selectedOption.text.match(/(\d+\.?\d*)%/);
+        const commissionRate = commissionText ? parseFloat(commissionText[1]) : 0;
+        
+        const commissionAmount = (totalAmount * commissionRate / 100).toFixed(2);
+        
+        document.getElementById('commissionAmount').textContent = `RM ${commissionAmount}`;
+        document.getElementById('commissionDisplay').style.display = 'block';
+    } else {
+        document.getElementById('commissionDisplay').style.display = 'none';
+    }
+}
+
+// Update commission when agent changes
+document.querySelector('select[name="agent_id"]').addEventListener('change', calculateCommission);
+
+// Auto-generate order number
+document.addEventListener('DOMContentLoaded', function() {
+    const orderNumberField = document.querySelector('input[name="order_number"]');
+    if (!orderNumberField.value) {
+        const timestamp = Date.now().toString().slice(-6);
+        orderNumberField.value = `ORD-${timestamp}`;
+    }
+});
+</script>
+{% endblock %}

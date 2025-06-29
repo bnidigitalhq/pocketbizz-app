@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}📁 Folder Resit Tersusun{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800 mb-2">📁 Folder Resit Tersusun</h1>
+                <p class="text-gray-600">Semua resit tersusun mengikut kategori secara automatik oleh sistem PocketBizz</p>
+            </div>
+            <div class="text-right">
+                <div class="text-3xl font-bold text-blue-600" id="total-receipts">-</div>
+                <div class="text-sm text-gray-500">Jumlah Resit</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Folders -->
+    <div id="receipt-folders" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Loading placeholder -->
+        <div class="col-span-full text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p class="text-gray-500">Memuat folder resit...</p>
+        </div>
+    </div>
+
+    <!-- File Modal -->
+    <div id="file-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg max-w-4xl max-h-[90vh] w-full mx-4 overflow-hidden">
+            <div class="bg-blue-600 text-white p-4 flex items-center justify-between">
+                <h3 class="text-lg font-bold" id="modal-title">Folder Resit</h3>
+                <button onclick="closeModal()" class="text-white hover:text-gray-200">
+                    <i data-feather="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <div id="file-list" class="space-y-3">
+                    <!-- Files will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let receiptFolders = {};
+
+// Load receipt folders on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadReceiptFolders();
+});
+
+async function loadReceiptFolders() {
+    try {
+        const response = await fetch('/api/receipt-folders');
+        if (response.ok) {
+            receiptFolders = await response.json();
+            displayReceiptFolders();
+        } else {
+            showError('Gagal memuat folder resit');
+        }
+    } catch (error) {
+        console.error('Error loading receipt folders:', error);
+        showError('Gagal memuat folder resit');
+    }
+}
+
+function displayReceiptFolders() {
+    const container = document.getElementById('receipt-folders');
+    const totalReceipts = Object.values(receiptFolders).reduce((sum, folder) => sum + folder.count, 0);
+    
+    document.getElementById('total-receipts').textContent = totalReceipts;
+    
+    if (totalReceipts === 0) {
+        container.innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <div class="text-6xl mb-4">📭</div>
+                <h3 class="text-xl font-bold text-gray-700 mb-2">Belum Ada Resit</h3>
+                <p class="text-gray-500 mb-6">Mula scan resit untuk melihat organisasi automatik sistem PocketBizz!</p>
+                <a href="/scan_receipt" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 inline-flex items-center">
+                    <i data-feather="camera" class="w-5 h-5 mr-2"></i>
+                    Scan Resit Pertama
+                </a>
+            </div>
+        `;
+        
+        // Re-initialize feather icons
+        feather.replace();
+        return;
+    }
+    
+    let html = '';
+    
+    // Category icons mapping
+    const categoryIcons = {
+        'makanan': '🍽️',
+        'peralatan': '🔧',
+        'bekalan_pejabat': '📝',
+        'pengangkutan': '🚗',
+        'utiliti': '💡',
+        'rawatan_kesihatan': '🏥',
+        'pakaian': '👕',
+        'pemasaran': '📢',
+        'sewa': '🏢',
+        'insurans': '🛡️',
+        'lain_lain': '📦'
+    };
+    
+    Object.entries(receiptFolders).forEach(([category, folder]) => {
+        const icon = categoryIcons[category] || '📁';
+        const files = folder.files || [];
+        const recentFile = files[0]; // Most recent file
+        
+        html += `
+            <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer" 
+                 onclick="openFolder('${category}')">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-4xl">${icon}</div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-blue-600">${folder.count}</div>
+                            <div class="text-xs text-gray-500">resit</div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="font-bold text-gray-800 mb-2">${folder.name}</h3>
+                    
+                    ${recentFile ? `
+                        <div class="text-sm text-gray-600 mb-3">
+                            <div class="flex items-center">
+                                <i data-feather="clock" class="w-4 h-4 mr-1"></i>
+                                <span>Terkini: ${new Date(recentFile.created).toLocaleDateString('ms-MY')}</span>
+                            </div>
+                            <div class="mt-1 truncate">${recentFile.name}</div>
+                        </div>
+                    ` : `
+                        <div class="text-sm text-gray-400 mb-3">Tiada resit dalam folder ini</div>
+                    `}
+                    
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-500">Klik untuk buka folder</span>
+                        <i data-feather="folder-open" class="w-4 h-4 text-blue-600"></i>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    
+    // Re-initialize feather icons
+    feather.replace();
+}
+
+function openFolder(category) {
+    const folder = receiptFolders[category];
+    if (!folder) return;
+    
+    const modal = document.getElementById('file-modal');
+    const title = document.getElementById('modal-title');
+    const fileList = document.getElementById('file-list');
+    
+    title.textContent = folder.name;
+    
+    if (folder.files.length === 0) {
+        fileList.innerHTML = `
+            <div class="text-center py-8">
+                <div class="text-4xl mb-4">📭</div>
+                <p class="text-gray-500">Tiada resit dalam folder ini</p>
+            </div>
+        `;
+    } else {
+        let filesHtml = '';
+        
+        folder.files.forEach(file => {
+            const fileSize = formatFileSize(file.size);
+            const createdDate = new Date(file.created).toLocaleDateString('ms-MY');
+            const createdTime = new Date(file.created).toLocaleTimeString('ms-MY', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            filesHtml += `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div class="flex items-center space-x-3">
+                        <div class="text-2xl">📄</div>
+                        <div>
+                            <h4 class="font-medium text-gray-800">${file.name}</h4>
+                            <p class="text-sm text-gray-500">${fileSize} • ${createdDate} ${createdTime}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        <button onclick="viewReceipt('${file.url}')" 
+                                class="bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 flex items-center">
+                            <i data-feather="eye" class="w-4 h-4 mr-1"></i>
+                            Lihat
+                        </button>
+                        <button onclick="downloadReceipt('${file.url}', '${file.name}')" 
+                                class="bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 flex items-center">
+                            <i data-feather="download" class="w-4 h-4 mr-1"></i>
+                            Muat Turun
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        fileList.innerHTML = filesHtml;
+    }
+    
+    modal.classList.remove('hidden');
+    
+    // Re-initialize feather icons
+    feather.replace();
+}
+
+function closeModal() {
+    document.getElementById('file-modal').classList.add('hidden');
+}
+
+function viewReceipt(url) {
+    window.open(url, '_blank');
+}
+
+function downloadReceipt(url, filename) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function showError(message) {
+    const container = document.getElementById('receipt-folders');
+    container.innerHTML = `
+        <div class="col-span-full text-center py-12">
+            <div class="text-6xl mb-4">⚠️</div>
+            <h3 class="text-xl font-bold text-red-600 mb-2">Ralat</h3>
+            <p class="text-gray-600">${message}</p>
+            <button onclick="loadReceiptFolders()" 
+                    class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                Cuba Lagi
+            </button>
+        </div>
+    `;
+}
+
+// Close modal when clicking outside
+document.getElementById('file-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

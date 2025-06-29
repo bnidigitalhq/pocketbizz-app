@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Laporan - SME Accounting{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Laporan</h1>
+            <p class="text-gray-600">{{ current_month }}</p>
+        </div>
+        <div class="flex space-x-2">
+            <a href="{{ url_for('export_pdf', month=current_month_num, year=current_year) }}" 
+               class="premium-button px-4 py-2 bg-error-red text-white rounded-lg hover:bg-red-600 transition-colors">
+                <i data-feather="file-text" class="w-4 h-4 inline mr-2"></i>
+                Export PDF
+            </a>
+            <a href="{{ url_for('print_report', month=current_month_num, year=current_year) }}" 
+               target="_blank"
+               class="premium-button px-4 py-2 bg-shopee-blue text-white rounded-lg hover:bg-blue-600 transition-colors">
+                <i data-feather="printer" class="w-4 h-4 inline mr-2"></i>
+                Print
+            </a>
+            <button onclick="showExportModal()" class="premium-button px-4 py-2 bg-shopee-orange text-white rounded-lg hover:bg-red-600 transition-colors">
+                <i data-feather="download" class="w-4 h-4 inline mr-2"></i>
+                Export CSV
+            </button>
+        </div>
+    </div>
+
+    <!-- Monthly Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <!-- Monthly Income -->
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-success-green">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Pendapatan Bulan Ini</p>
+                    <p class="text-2xl font-bold text-success-green">RM {{ "%.2f"|format(monthly_income) }}</p>
+                </div>
+                <div class="p-3 rounded-full bg-success-green bg-opacity-10">
+                    <i data-feather="trending-up" class="w-6 h-6 text-success-green"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Expenses -->
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-error-red">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Perbelanjaan Bulan Ini</p>
+                    <p class="text-2xl font-bold text-error-red">RM {{ "%.2f"|format(monthly_expenses) }}</p>
+                </div>
+                <div class="p-3 rounded-full bg-error-red bg-opacity-10">
+                    <i data-feather="trending-down" class="w-6 h-6 text-error-red"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Profit -->
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-shopee-blue">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Untung Bulan Ini</p>
+                    <p class="text-2xl font-bold {% if monthly_profit >= 0 %}text-success-green{% else %}text-error-red{% endif %}">RM {{ "%.2f"|format(monthly_profit) }}</p>
+                </div>
+                <div class="p-3 rounded-full bg-shopee-blue bg-opacity-10">
+                    <i data-feather="dollar-sign" class="w-6 h-6 text-shopee-blue"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Channel Performance Chart -->
+    {% if channel_income %}
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Prestasi Saluran Bisnes</h2>
+        <div class="space-y-4">
+            {% for channel, amount in channel_income.items() %}
+            {% set percentage = (amount / monthly_income * 100) if monthly_income > 0 else 0 %}
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="font-medium text-gray-700">{{ channel.title() }}</span>
+                    <span class="font-bold text-gray-800">RM {{ "%.2f"|format(amount) }} ({{ "%.1f"|format(percentage) }}%)</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="bg-shopee-orange h-3 rounded-full transition-all duration-300" style="width: {{ percentage }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Expense Breakdown -->
+    {% if expense_categories %}
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Pecahan Perbelanjaan</h2>
+        <div class="space-y-4">
+            {% for category, amount in expense_categories.items() %}
+            {% set percentage = (amount / monthly_expenses * 100) if monthly_expenses > 0 else 0 %}
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="font-medium text-gray-700">{{ category }}</span>
+                    <span class="font-bold text-gray-800">RM {{ "%.2f"|format(amount) }} ({{ "%.1f"|format(percentage) }}%)</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="bg-error-red h-3 rounded-full transition-all duration-300" style="width: {{ percentage }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Stats Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-4 text-center">
+            <i data-feather="shopping-cart" class="w-8 h-8 text-shopee-orange mx-auto mb-2"></i>
+            <p class="text-sm text-gray-600">Shopee Sales</p>
+            <p class="text-lg font-bold text-gray-800">RM {{ "%.0f"|format(channel_income.get('shopee', 0)) }}</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-4 text-center">
+            <i data-feather="video" class="w-8 h-8 text-gray-800 mx-auto mb-2"></i>
+            <p class="text-sm text-gray-600">TikTok Shop</p>
+            <p class="text-lg font-bold text-gray-800">RM {{ "%.0f"|format(channel_income.get('tiktok', 0)) }}</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-4 text-center">
+            <i data-feather="home" class="w-8 h-8 text-success-green mx-auto mb-2"></i>
+            <p class="text-sm text-gray-600">Walk-in</p>
+            <p class="text-lg font-bold text-gray-800">RM {{ "%.0f"|format(channel_income.get('walkin', 0)) }}</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-4 text-center">
+            <i data-feather="users" class="w-8 h-8 text-shopee-blue mx-auto mb-2"></i>
+            <p class="text-sm text-gray-600">Agent Sales</p>
+            <p class="text-lg font-bold text-gray-800">RM {{ "%.0f"|format(channel_income.get('agent', 0)) }}</p>
+        </div>
+    </div>
+
+    <!-- Profit Margin -->
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Margin Keuntungan</h2>
+        {% if monthly_income > 0 %}
+        {% set profit_margin = (monthly_profit / monthly_income * 100) %}
+        <div class="flex items-center justify-between mb-4">
+            <span class="text-gray-600">Margin Bulan Ini:</span>
+            <span class="text-2xl font-bold {% if profit_margin >= 0 %}text-success-green{% else %}text-error-red{% endif %}">
+                {{ "%.1f"|format(profit_margin) }}%
+            </span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-4">
+            <div class="{% if profit_margin >= 0 %}bg-success-green{% else %}bg-error-red{% endif %} h-4 rounded-full transition-all duration-300" 
+                 style="width: {{ profit_margin|abs if profit_margin|abs <= 100 else 100 }}%"></div>
+        </div>
+        {% else %}
+        <p class="text-gray-600">Tiada data pendapatan untuk mengira margin keuntungan.</p>
+        {% endif %}
+    </div>
+
+    <!-- Business Health Score -->
+    <div class="bg-gradient-to-r from-shopee-orange to-red-500 rounded-lg shadow-md p-4 text-white">
+        <h2 class="text-lg font-semibold mb-2">Skor Kesihatan Bisnes</h2>
+        {% if monthly_income > 0 %}
+        {% set health_score = 85 if monthly_profit > 0 else 60 %}
+        <div class="flex items-center justify-between mb-3">
+            <span>Skor Bulan Ini:</span>
+            <span class="text-2xl font-bold">{{ health_score }}/100</span>
+        </div>
+        <div class="w-full bg-white bg-opacity-20 rounded-full h-3">
+            <div class="bg-white h-3 rounded-full transition-all duration-300" style="width: {{ health_score }}%"></div>
+        </div>
+        <p class="text-sm mt-3 opacity-90">
+            {% if health_score >= 80 %}
+            🎉 Cemerlang! Bisnes anda menunjukkan prestasi yang sangat baik.
+            {% elif health_score >= 60 %}
+            👍 Baik! Ada ruang untuk penambahbaikan.
+            {% else %}
+            ⚠️ Perlu perhatian. Fokus pada peningkatan jualan dan kawalan perbelanjaan.
+            {% endif %}
+        </p>
+        {% else %}
+        <p>Mulakan dengan merekod transaksi untuk melihat skor kesihatan bisnes anda.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Export Modal -->
+<div id="exportModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Export Laporan</h3>
+                <button onclick="hideExportModal()" class="text-gray-400 hover:text-gray-600">
+                    <i data-feather="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <form id="exportForm" action="{{ url_for('export_csv') }}" method="GET">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tarikh Mula</label>
+                    <input type="date" name="start_date" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tarikh Akhir</label>
+                    <input type="date" name="end_date" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="button" onclick="hideExportModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                        Batal
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-shopee-orange text-white rounded-lg hover:bg-red-600">
+                        <i data-feather="download" class="w-4 h-4 inline mr-2"></i>
+                        Export CSV
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function showExportModal() {
+        document.getElementById('exportModal').classList.remove('hidden');
+        
+        // Set default dates (current month)
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        
+        document.querySelector('input[name="start_date"]').value = firstDay.toISOString().split('T')[0];
+        document.querySelector('input[name="end_date"]').value = lastDay.toISOString().split('T')[0];
+    }
+    
+    function hideExportModal() {
+        document.getElementById('exportModal').classList.add('hidden');
+    }
+    
+    // Quick export buttons
+    function exportThisMonth() {
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        
+        const url = `{{ url_for('export_csv') }}?start_date=${firstDay.toISOString().split('T')[0]}&end_date=${lastDay.toISOString().split('T')[0]}`;
+        window.location.href = url;
+    }
+    
+    function exportLastMonth() {
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastDay = new Date(now.getFullYear(), now.getMonth(), 0);
+        
+        const url = `{{ url_for('export_csv') }}?start_date=${firstDay.toISOString().split('T')[0]}&end_date=${lastDay.toISOString().split('T')[0]}`;
+        window.location.href = url;
+    }
+</script>
+{% endblock %}
