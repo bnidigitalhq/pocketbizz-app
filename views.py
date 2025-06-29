@@ -10,7 +10,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.units import inch
 from app import app, db
-from models import Transaction, BusinessSettings, Product, StockMovement, Agent, AgentOrder, ZakatCalculation, Supplier, ProductVariant, PurchaseOrder, PurchaseOrderItem
+from models import Transaction, BusinessSettings, Product, StockMovement, Agent, AgentOrder, ZakatCalculation, Supplier, ProductVariant, PurchaseOrder, PurchaseOrderItem, NotificationSettings
 
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'csv', 'png', 'jpg', 'jpeg', 'gif', 'pdf'}
@@ -1764,3 +1764,114 @@ def enable_product_variants(product_id):
         
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+
+# ===== NOTIFICATION SETTINGS ROUTES =====
+
+@app.route('/admin/notification-settings')
+def admin_notification_settings():
+    """Admin notification settings page"""
+    settings = NotificationSettings.get_settings()
+    return render_template('admin_notification_settings.html', settings=settings)
+
+@app.route('/admin/update-notification-settings', methods=['POST'])
+def admin_update_notification_settings():
+    """Update notification settings"""
+    try:
+        settings = NotificationSettings.get_settings()
+        
+        # Update backup reminder settings
+        settings.backup_reminder_enabled = 'backup_reminder_enabled' in request.form
+        settings.backup_reminder_interval_hours = int(request.form.get('backup_reminder_interval_hours', 24))
+        
+        # Update WhatsApp support settings
+        settings.whatsapp_support_enabled = 'whatsapp_support_enabled' in request.form
+        settings.whatsapp_support_interval_hours = int(request.form.get('whatsapp_support_interval_hours', 72))
+        
+        # Update low stock alerts
+        settings.low_stock_alerts_enabled = 'low_stock_alerts_enabled' in request.form
+        settings.low_stock_check_interval_hours = int(request.form.get('low_stock_check_interval_hours', 12))
+        
+        # Update expense limit warnings
+        settings.expense_limit_warnings_enabled = 'expense_limit_warnings_enabled' in request.form
+        settings.expense_warning_threshold = float(request.form.get('expense_warning_threshold', 80.0))
+        
+        settings.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        flash('Tetapan notifikasi berjaya dikemaskini!', 'success')
+        return redirect(url_for('admin_notification_settings'))
+        
+    except Exception as e:
+        flash(f'Ralat: {str(e)}', 'error')
+        return redirect(url_for('admin_notification_settings'))
+
+@app.route('/api/check-notifications')
+def api_check_notifications():
+    """API to check if notifications should be shown"""
+    try:
+        settings = NotificationSettings.get_settings()
+        notifications_to_show = []
+        current_time = datetime.utcnow()
+        
+        # Check backup reminder
+        if settings.backup_reminder_enabled:
+            if (not settings.last_backup_reminder or 
+                (current_time - settings.last_backup_reminder).total_seconds() >= 
+                settings.backup_reminder_interval_hours * 3600):
+                notifications_to_show.append({
+                    'type': 'backup_reminder',
+                    'title': '💾 Backup Data',
+                    'message': 'Sudah masanya untuk backup data bisnes anda!',
+                    'action': 'backup'
+                })
+                # Update last reminder time
+                settings.last_backup_reminder = current_time
+                db.session.commit()
+        
+        # Check WhatsApp support reminder
+        if settings.whatsapp_support_enabled:
+            if (not settings.last_whatsapp_reminder or 
+                (current_time - settings.last_whatsapp_reminder).total_seconds() >= 
+                settings.whatsapp_support_interval_hours * 3600):
+                notifications_to_show.append({
+                    'type': 'whatsapp_support',
+                    'title': '💬 Sokongan WhatsApp',
+                    'message': 'Ada masalah? Hubungi sokongan 24/7 kami melalui WhatsApp!',
+                    'action': 'whatsapp',
+                    'url': 'https://wa.me/60123456789?text=Hi%20PocketBizz,%20saya%20perlukan%20bantuan'
+                })
+                # Update last reminder time
+                settings.last_whatsapp_reminder = current_time
+                db.session.commit()
+        
+        # Check low stock alerts
+        if settings.low_stock_alerts_enabled:
+            if (not settings.last_low_stock_check or 
+                (current_time - settings.last_low_stock_check).total_seconds() >= 
+                settings.low_stock_check_interval_hours * 3600):
+                
+                low_stock_products = Product.query.filter(
+                    Product.current_stock <= Product.minimum_stock,
+                    Product.is_active == True
+                ).count()
+                
+                if low_stock_products > 0:
+                    notifications_to_show.append({
+                        'type': 'low_stock_alert',
+                        'title': '⚠️ Stok Rendah',
+                        'message': f'{low_stock_products} produk hampir habis stok!',
+                        'action': 'view_inventory',
+                        'url': '/inventory'
+                    })
+                
+                settings.last_low_stock_check = current_time
+                db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'notifications': notifications_to_show,
+            'settings': settings.to_dict()
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})

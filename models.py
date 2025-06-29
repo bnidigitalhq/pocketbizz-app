@@ -386,3 +386,55 @@ class PurchaseOrderItem(db.Model):
     
     def __repr__(self):
         return f'<PurchaseOrderItem {self.product.name if self.product else "Unknown"}>'
+
+class NotificationSettings(db.Model):
+    """Notification control settings for admin"""
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Backup reminder settings
+    backup_reminder_enabled = db.Column(db.Boolean, default=True)
+    backup_reminder_interval_hours = db.Column(db.Integer, default=24)  # Every 24 hours
+    last_backup_reminder = db.Column(db.DateTime)
+    
+    # WhatsApp support settings
+    whatsapp_support_enabled = db.Column(db.Boolean, default=True)
+    whatsapp_support_interval_hours = db.Column(db.Integer, default=72)  # Every 3 days
+    last_whatsapp_reminder = db.Column(db.DateTime)
+    
+    # Low stock alert settings
+    low_stock_alerts_enabled = db.Column(db.Boolean, default=True)
+    low_stock_check_interval_hours = db.Column(db.Integer, default=12)  # Every 12 hours
+    last_low_stock_check = db.Column(db.DateTime)
+    
+    # Expense limit warning settings
+    expense_limit_warnings_enabled = db.Column(db.Boolean, default=True)
+    expense_warning_threshold = db.Column(db.Float, default=80.0)  # 80% of limit
+    
+    # System settings
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<NotificationSettings {self.id}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'backup_reminder_enabled': self.backup_reminder_enabled,
+            'backup_reminder_interval_hours': self.backup_reminder_interval_hours,
+            'whatsapp_support_enabled': self.whatsapp_support_enabled,
+            'whatsapp_support_interval_hours': self.whatsapp_support_interval_hours,
+            'low_stock_alerts_enabled': self.low_stock_alerts_enabled,
+            'expense_limit_warnings_enabled': self.expense_limit_warnings_enabled,
+            'expense_warning_threshold': self.expense_warning_threshold
+        }
+    
+    @staticmethod
+    def get_settings():
+        """Get notification settings (create default if none exists)"""
+        settings = NotificationSettings.query.first()
+        if not settings:
+            settings = NotificationSettings()
+            db.session.add(settings)
+            db.session.commit()
+        return settings
