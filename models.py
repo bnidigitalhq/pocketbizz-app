@@ -31,6 +31,7 @@ class Transaction(db.Model):
 class BusinessSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     business_name = db.Column(db.String(200))
+    welcome_name = db.Column(db.String(100))  # Personal name for welcome badge
     monthly_expense_limit = db.Column(db.Float, default=5000.0)
     default_currency = db.Column(db.String(10), default='RM')
     # Zakat settings

@@ -58,12 +58,17 @@ def index():
                 channel_stats[transaction.channel] = 0
             channel_stats[transaction.channel] += transaction.amount
     
+    # Get business settings for welcome badge
+    settings = BusinessSettings.query.first()
+    
     return render_template('index.html',
                          today_income=today_income,
                          today_expenses=today_expenses,
                          today_profit=today_profit,
                          recent_transactions=recent_transactions,
-                         channel_stats=channel_stats)
+                         channel_stats=channel_stats,
+                         settings=settings,
+                         current_date=datetime.now())
 
 @app.route('/add_transaction')
 def add_transaction():
@@ -372,6 +377,7 @@ def update_settings():
             db.session.add(business_settings)
         
         business_settings.business_name = request.form.get('business_name')
+        business_settings.welcome_name = request.form.get('welcome_name')
         business_settings.monthly_expense_limit = float(request.form.get('monthly_expense_limit', 5000))
         business_settings.default_currency = request.form.get('default_currency', 'RM')
         business_settings.updated_at = datetime.utcnow()
