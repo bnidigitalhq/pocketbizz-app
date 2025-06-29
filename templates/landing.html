@@ -72,9 +72,14 @@
                     <a href="#pricing" class="text-gray-700 hover:text-primary transition-colors">Harga</a>
                     <a href="#testimonials" class="text-gray-700 hover:text-primary transition-colors">Testimoni</a>
                 </div>
-                <a href="{{ url_for('index') }}" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors font-semibold">
-                    Cuba Percuma
-                </a>
+                <div class="flex space-x-4">
+                    <a href="{{ url_for('auth.demo_login') }}" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors font-semibold">
+                        Demo Login
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="border border-primary text-primary px-6 py-2 rounded-lg hover:bg-primary hover:text-white transition-colors font-semibold">
+                        Daftar
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
@@ -99,11 +104,11 @@
             </p>
             
             <div class="flex flex-col md:flex-row gap-4 justify-center mb-12">
-                <a href="{{ url_for('index') }}" class="bg-primary text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-red-600 transition-all transform hover:scale-105 shadow-lg">
-                    🎯 Mula Guna Sekarang - PERCUMA
+                <a href="{{ url_for('auth.register') }}" class="bg-primary text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-red-600 transition-all transform hover:scale-105 shadow-lg">
+                    🎯 Daftar Akaun - PERCUMA
                 </a>
-                <a href="#demo" class="border-2 border-primary text-primary px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary hover:text-white transition-all">
-                    📱 Lihat Demo
+                <a href="{{ url_for('auth.demo_login') }}" class="border-2 border-primary text-primary px-8 py-4 rounded-xl text-lg font-semibold hover:bg-primary hover:text-white transition-all">
+                    📱 Cuba Demo Sekarang
                 </a>
             </div>
             

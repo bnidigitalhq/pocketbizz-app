@@ -1504,6 +1504,7 @@ def receipt_folders():
 # === ADMIN DASHBOARD ROUTES ===
 
 @app.route('/admin')
+@admin_required
 def admin_dashboard():
     """Admin dashboard with system overview and management tools"""
     # Get system statistics
