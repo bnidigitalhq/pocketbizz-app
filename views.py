@@ -1481,3 +1481,8 @@ def get_category_display_name(category):
     }
     
     return display_names.get(category, 'Tidak Dikategorikan')
+
+@app.route('/receipt-folders')
+def receipt_folders():
+    """Receipt folders browser page"""
+    return render_template('receipt_folders.html')

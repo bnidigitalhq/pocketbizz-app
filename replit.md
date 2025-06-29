@@ -174,6 +174,18 @@ The application is built with Flask backend and designed with a user experience 
 - ✅ **API Backend**: Complete REST API supporting all advanced features with proper error handling
 - ✅ **Enhanced User Experience**: Real-time notifications, backup reminders, contextual help system
 
+### June 29, 2025 - Smart Receipt Processing USP Implementation
+- ✅ **Core USP**: Smart Receipt Processing - Scan → Auto-Categorize → Convert to PDF → Organize by Category
+- ✅ **Smart Categorization Engine**: Auto-detect expense categories based on vendor and OCR text analysis
+- ✅ **Automated File Organization**: Structured folder system with receipts organized by category automatically
+- ✅ **Intelligent Data Extraction**: Extract vendor, amount, date, and items from receipt OCR with Malaysian RM support
+- ✅ **PDF Conversion & Storage**: Convert receipt images to searchable PDFs with organized naming convention
+- ✅ **Receipt Folder Browser**: Complete interface to browse, view, and download organized receipts by category
+- ✅ **Category Management**: 11 predefined business categories (Makanan, Peralatan, Bekalan Pejabat, etc.)
+- ✅ **Transaction Form Integration**: Auto-fill transaction forms with extracted receipt data
+- ✅ **Visual Processing Pipeline**: Real-time UI showing 4-step processing (Analyze → Categorize → Convert → Organize)
+- ✅ **Enhanced Navigation**: Receipt folder access directly from main navigation for easy organization viewing
+
 ### System Architecture Updates
 - **Database**: Now using PostgreSQL with connection pooling and health checks
 - **UI Framework**: Enhanced Tailwind CSS implementation with custom Shopee-inspired color scheme
