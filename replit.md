@@ -257,3 +257,4 @@ Preferred communication style: Simple, everyday language.
 Authentication: Will use Supabase authentication system (implement later)
 Admin Panel: Currently accessible without authentication for testing, will be restricted to admin users only after Supabase auth implementation
 Deployment Workflow: Manual git push preferred over auto-sync for better control and safety
+Repository Privacy: Public repository approach accepted for cost-effectiveness and industry standard practices
