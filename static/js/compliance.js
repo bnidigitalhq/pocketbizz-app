@@ -419,6 +419,12 @@ class ComplianceManager {
     }
     
     setupBackupReminders() {
+        // Check if admin notifications are disabled
+        if (localStorage.getItem('admin_notifications_disabled') === 'true') {
+            console.log('Admin notifications disabled, skipping backup reminders');
+            return;
+        }
+        
         const lastBackup = localStorage.getItem('lastBackupDate');
         const thirtyDaysAgo = new Date(Date.now() - (30 * 24 * 60 * 60 * 1000));
         
