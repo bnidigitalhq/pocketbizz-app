@@ -126,9 +126,22 @@ window.addEventListener('beforeinstallprompt', (e) => {
     
     // Show install prompt after user has used app for 30 seconds
     if (shouldShowInstallPrompt()) {
-        setTimeout(showInstallPrompt, 30000);
+        setTimeout(showInstallPrompt, 5000); // Reduced to 5 seconds for testing
     }
 });
+
+// Force show install prompt for testing (remove in production)
+setTimeout(() => {
+    console.log('PWA Debug: Checking install conditions...');
+    console.log('- App installed:', isAppInstalled());
+    console.log('- Should show prompt:', shouldShowInstallPrompt());
+    console.log('- Deferred prompt available:', !!deferredPrompt);
+    
+    if (!isAppInstalled() && shouldShowInstallPrompt()) {
+        console.log('PWA Debug: Forcing install prompt for testing');
+        showInstallPrompt();
+    }
+}, 3000);
 
 window.addEventListener('appinstalled', () => {
     console.log('PWA installed successfully');
