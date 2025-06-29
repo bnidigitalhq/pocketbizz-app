@@ -300,6 +300,9 @@
 </div>
 {% endblock %}
 
+<!-- Include Quick Add Modal -->
+{% include 'quick_add_modal.html' %}
+
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/csv_upload.js') }}"></script>
 <script>
@@ -316,5 +319,64 @@ fetch('/api/check-notifications')
     .catch(error => {
         console.log('Could not check notification settings:', error);
     });
+
+// Enhanced FAB functionality with quick modal
+function initializeEnhancedFAB() {
+    const fabButton = document.querySelector('.fab-main');
+    const quickActionsMenu = document.querySelector('.fab-actions');
+    
+    if (fabButton && quickActionsMenu) {
+        // Override existing FAB click to show modal instead
+        fabButton.onclick = function() {
+            openQuickAddModal('income');
+        };
+        
+        // Add quick action buttons for different transaction types
+        const fabActions = document.createElement('div');
+        fabActions.className = 'fab-quick-actions hidden';
+        fabActions.innerHTML = `
+            <button onclick="openQuickAddModal('income')" class="fab-action-btn bg-green-500 hover:bg-green-600">
+                <i data-feather="trending-up" class="w-5 h-5"></i>
+                <span class="fab-tooltip">Pendapatan</span>
+            </button>
+            <button onclick="openQuickAddModal('expense')" class="fab-action-btn bg-red-500 hover:bg-red-600">
+                <i data-feather="trending-down" class="w-5 h-5"></i>
+                <span class="fab-tooltip">Perbelanjaan</span>
+            </button>
+            <button onclick="window.location.href='/scan-receipt'" class="fab-action-btn bg-blue-500 hover:bg-blue-600">
+                <i data-feather="camera" class="w-5 h-5"></i>
+                <span class="fab-tooltip">Scan Resit</span>
+            </button>
+        `;
+        
+        // Insert after main FAB
+        fabButton.parentNode.insertBefore(fabActions, fabButton.nextSibling);
+        
+        feather.replace();
+    }
+}
+
+// Initialize enhanced FAB when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeEnhancedFAB();
+});
 </script>
+
+<style>
+.fab-action-btn {
+    @apply w-12 h-12 rounded-full text-white shadow-lg flex items-center justify-center mb-3 transition-all duration-200 relative;
+}
+
+.fab-tooltip {
+    @apply absolute right-14 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 transition-opacity duration-200 pointer-events-none;
+}
+
+.fab-action-btn:hover .fab-tooltip {
+    @apply opacity-100;
+}
+
+.fab-quick-actions {
+    @apply fixed bottom-20 right-4 z-40 flex flex-col;
+}
+</style>
 {% endblock %}
