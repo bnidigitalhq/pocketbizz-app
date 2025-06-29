@@ -7,6 +7,7 @@ import os
 import logging
 from datetime import datetime, timedelta
 from functools import wraps
+from typing import Optional, Dict, Any, Tuple
 from supabase import create_client, Client
 from flask import session, request, redirect, url_for, flash, jsonify, g
 from jose import jwt, JWTError
@@ -14,10 +15,10 @@ from jose import jwt, JWTError
 # Supabase configuration
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY")
-JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET", os.environ.get("SESSION_SECRET"))
+JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET", os.environ.get("SESSION_SECRET", "default-secret"))
 
 # Initialize Supabase client
-supabase: Client = None
+supabase: Optional[Client] = None
 
 def init_supabase():
     """Initialize Supabase client"""
@@ -37,7 +38,7 @@ def get_current_user():
     
     # Check for JWT token in headers (for API calls)
     auth_header = request.headers.get('Authorization')
-    if auth_header and auth_header.startswith('Bearer '):
+    if auth_header and auth_header.startswith('Bearer ') and JWT_SECRET:
         token = auth_header.split(' ')[1]
         try:
             payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])

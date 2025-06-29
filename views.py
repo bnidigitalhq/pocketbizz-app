@@ -2,7 +2,7 @@ import csv
 import io
 import os
 from datetime import datetime, timedelta
-from flask import render_template, request, redirect, url_for, flash, jsonify, make_response, send_file
+from flask import render_template, request, redirect, url_for, flash, jsonify, make_response, send_file, g
 from werkzeug.utils import secure_filename
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib import colors
@@ -11,6 +11,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.units import inch
 from app import app, db
 from models import Transaction, BusinessSettings, Product, StockMovement, Agent, AgentOrder, ZakatCalculation, Supplier, ProductVariant, PurchaseOrder, PurchaseOrderItem, NotificationSettings
+from supabase_auth import login_required, admin_required, get_current_user, is_demo_mode
 
 UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = {'csv', 'png', 'jpg', 'jpeg', 'gif', 'pdf'}
@@ -35,6 +36,11 @@ def landing():
 @app.route('/')
 def index():
     """Dashboard showing today's summary and recent transactions"""
+    # Check if user is authenticated, if not redirect to landing
+    user = get_current_user()
+    if not user:
+        return redirect(url_for('landing'))
+    
     today = datetime.now().date()
     
     # Get today's transactions
@@ -71,6 +77,7 @@ def index():
                          current_date=datetime.now())
 
 @app.route('/add_transaction')
+@login_required
 def add_transaction():
     """Add transaction page"""
     # Get pre-filled data from query parameters (from Quick Add)
@@ -84,6 +91,7 @@ def add_transaction():
                          prefill_category=category)
 
 @app.route('/add_transaction', methods=['POST'])
+@login_required
 def add_transaction_post():
     """Handle transaction addition with optional PDF attachment"""
     try:

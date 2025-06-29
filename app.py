@@ -33,6 +33,10 @@ with app.app_context():
     import models
     import views
     
+    # Import and register authentication routes
+    from auth_routes import auth_bp
+    app.register_blueprint(auth_bp)
+    
     # Create all tables
     db.create_all()
 
