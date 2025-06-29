@@ -127,15 +127,15 @@
                     <span class="text-xs mt-1 font-medium">Imbas</span>
                 </a>
                 
-                <!-- Receipt Folders -->
-                <a href="{{ url_for('receipt_folders') }}" class="nav-item flex flex-col items-center p-2 transition-all duration-300 hover:scale-105 ripple {% if request.endpoint == 'receipt_folders' %}text-shopee-orange{% else %}text-gray-600 hover:text-shopee-orange{% endif %}">
+                <!-- More/Features -->
+                <a href="{{ url_for('features') }}" class="nav-item flex flex-col items-center p-2 transition-all duration-300 hover:scale-105 ripple {% if request.endpoint in ['features', 'settings', 'receipt_folders'] %}text-shopee-orange{% else %}text-gray-600 hover:text-shopee-orange{% endif %}">
                     <div class="relative">
-                        <i data-feather="folder" class="w-6 h-6 nav-icon transition-transform duration-300"></i>
-                        {% if request.endpoint == 'receipt_folders' %}
+                        <i data-feather="grid" class="w-6 h-6 nav-icon transition-transform duration-300"></i>
+                        {% if request.endpoint in ['features', 'settings', 'receipt_folders'] %}
                         <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-shopee-orange rounded-full animate-pulse"></div>
                         {% endif %}
                     </div>
-                    <span class="text-xs mt-1 font-medium">Resit</span>
+                    <span class="text-xs mt-1 font-medium">Lagi</span>
                 </a>
         </div>
     </nav>
