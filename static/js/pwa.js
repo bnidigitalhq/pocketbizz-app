@@ -164,12 +164,25 @@ window.addEventListener('appinstalled', () => {
 document.addEventListener('DOMContentLoaded', function() {
     // Register service worker if not already registered
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/static/js/sw.js')
+        navigator.serviceWorker.register('/sw.js')
             .then(registration => {
-                console.log('PWA Service Worker registered:', registration.scope);
+                console.log('✅ PWA Service Worker registered:', registration.scope);
+                window.pwaStatus = {
+                    ...window.pwaStatus,
+                    serviceWorkerSupported: true
+                };
             })
             .catch(error => {
-                console.error('PWA Service Worker registration failed:', error);
+                console.error('❌ PWA Service Worker registration failed:', error);
+                // Try fallback path
+                return navigator.serviceWorker.register('/static/js/sw.js')
+                    .then(registration => {
+                        console.log('✅ PWA Service Worker registered (fallback):', registration.scope);
+                        window.pwaStatus = {
+                            ...window.pwaStatus,
+                            serviceWorkerSupported: true
+                        };
+                    });
             });
     }
     
