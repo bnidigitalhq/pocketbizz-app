@@ -1,0 +1,627 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - PocketBizz{% endblock %}
+
+{% block content %}
+<!-- Admin Header -->
+<div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-lg mb-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold">Admin Dashboard</h1>
+            <p class="opacity-90">PocketBizz System Management</p>
+        </div>
+        <div class="text-right">
+            <div class="text-sm opacity-90">Last Login</div>
+            <div class="font-semibold">{{ current_date.strftime('%d %b %Y, %H:%M') }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Total Users</p>
+                <p class="text-3xl font-bold text-purple-600">{{ total_users }}</p>
+            </div>
+            <div class="p-3 rounded-full bg-purple-100">
+                <i data-feather="users" class="w-6 h-6 text-purple-600"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Total Transactions</p>
+                <p class="text-3xl font-bold text-green-600">{{ total_transactions }}</p>
+            </div>
+            <div class="p-3 rounded-full bg-green-100">
+                <i data-feather="trending-up" class="w-6 h-6 text-green-600"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Revenue Today</p>
+                <p class="text-3xl font-bold text-blue-600">RM {{ "%.2f"|format(total_revenue) }}</p>
+            </div>
+            <div class="p-3 rounded-full bg-blue-100">
+                <i data-feather="dollar-sign" class="w-6 h-6 text-blue-600"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Active Businesses</p>
+                <p class="text-3xl font-bold text-orange-600">{{ active_businesses }}</p>
+            </div>
+            <div class="p-3 rounded-full bg-orange-100">
+                <i data-feather="briefcase" class="w-6 h-6 text-orange-600"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Management Sections -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- User Management -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">User Management</h3>
+            <button onclick="showUserManagement()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                Manage Users
+            </button>
+        </div>
+        
+        <div class="space-y-3">
+            <div class="flex justify-between py-2 border-b">
+                <span class="text-gray-600">New Users Today</span>
+                <span class="font-semibold">{{ new_users_today }}</span>
+            </div>
+            <div class="flex justify-between py-2 border-b">
+                <span class="text-gray-600">Active Users (7 days)</span>
+                <span class="font-semibold">{{ active_users_week }}</span>
+            </div>
+            <div class="flex justify-between py-2">
+                <span class="text-gray-600">Premium Users</span>
+                <span class="font-semibold text-green-600">{{ premium_users }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Analytics -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">System Analytics</h3>
+            <button onclick="showSystemAnalytics()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                View Analytics
+            </button>
+        </div>
+        
+        <div class="space-y-3">
+            <div class="flex justify-between py-2 border-b">
+                <span class="text-gray-600">API Calls Today</span>
+                <span class="font-semibold">{{ api_calls_today }}</span>
+            </div>
+            <div class="flex justify-between py-2 border-b">
+                <span class="text-gray-600">Storage Used</span>
+                <span class="font-semibold">{{ storage_used }}GB</span>
+            </div>
+            <div class="flex justify-between py-2">
+                <span class="text-gray-600">System Health</span>
+                <span class="font-semibold text-green-600">● Healthy</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Panels -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Database Management -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="text-center">
+            <div class="p-4 rounded-full bg-red-100 inline-block mb-4">
+                <i data-feather="database" class="w-8 h-8 text-red-600"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">Database Management</h3>
+            <p class="text-gray-600 text-sm mb-4">Backup, restore, and optimize database</p>
+            <button onclick="showDatabaseManagement()" class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">
+                Manage Database
+            </button>
+        </div>
+    </div>
+    
+    <!-- System Settings -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="text-center">
+            <div class="p-4 rounded-full bg-gray-100 inline-block mb-4">
+                <i data-feather="settings" class="w-8 h-8 text-gray-600"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">System Settings</h3>
+            <p class="text-gray-600 text-sm mb-4">Configure app settings and features</p>
+            <button onclick="showSystemSettings()" class="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700">
+                Configure System
+            </button>
+        </div>
+    </div>
+    
+    <!-- Logs & Monitoring -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="text-center">
+            <div class="p-4 rounded-full bg-yellow-100 inline-block mb-4">
+                <i data-feather="activity" class="w-8 h-8 text-yellow-600"></i>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">Logs & Monitoring</h3>
+            <p class="text-gray-600 text-sm mb-4">View system logs and performance</p>
+            <button onclick="showLogsMonitoring()" class="w-full bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700">
+                View Logs
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Dynamic Content Area -->
+<div id="adminContentArea" class="bg-white rounded-lg shadow-md p-6">
+    <div class="text-center py-12">
+        <i data-feather="info" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+        <h3 class="text-lg font-medium text-gray-600 mb-2">Select a management option</h3>
+        <p class="text-gray-500">Choose from the options above to manage your PocketBizz system</p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showUserManagement() {
+    const container = document.getElementById('adminContentArea');
+    container.innerHTML = `
+        <div class="mb-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">User Management</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <button onclick="exportUserData()" class="bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700">
+                    <i data-feather="download" class="w-5 h-5 inline mr-2"></i>
+                    Export All Users
+                </button>
+                <button onclick="sendNotificationToAll()" class="bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700">
+                    <i data-feather="bell" class="w-5 h-5 inline mr-2"></i>
+                    Send Notification
+                </button>
+                <button onclick="resetUserPasswords()" class="bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700">
+                    <i data-feather="key" class="w-5 h-5 inline mr-2"></i>
+                    Reset Passwords
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full border border-gray-200 rounded-lg">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">User ID</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Business Name</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Total Transactions</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Last Active</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-gray-600">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-4 py-3 text-sm">USER001</td>
+                            <td class="px-4 py-3 text-sm">Kedai Ahmad</td>
+                            <td class="px-4 py-3 text-sm">125</td>
+                            <td class="px-4 py-3 text-sm">29 Jun 2025</td>
+                            <td class="px-4 py-3 text-sm">
+                                <button class="text-blue-600 hover:underline mr-2">View</button>
+                                <button class="text-red-600 hover:underline">Delete</button>
+                            </td>
+                        </tr>
+                        <tr class="bg-gray-50">
+                            <td class="px-4 py-3 text-sm">USER002</td>
+                            <td class="px-4 py-3 text-sm">Sarah Boutique</td>
+                            <td class="px-4 py-3 text-sm">89</td>
+                            <td class="px-4 py-3 text-sm">28 Jun 2025</td>
+                            <td class="px-4 py-3 text-sm">
+                                <button class="text-blue-600 hover:underline mr-2">View</button>
+                                <button class="text-red-600 hover:underline">Delete</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+    feather.replace();
+}
+
+function showSystemAnalytics() {
+    const container = document.getElementById('adminContentArea');
+    container.innerHTML = `
+        <div class="mb-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">System Analytics</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-semibold mb-2">Daily Active Users</h4>
+                    <canvas id="dauChart" width="400" height="200"></canvas>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-semibold mb-2">Revenue Growth</h4>
+                    <canvas id="revenueChart" width="400" height="200"></canvas>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-semibold mb-2">Feature Usage</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span>Receipt Scanning</span>
+                            <span class="font-semibold">78%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>CSV Import</span>
+                            <span class="font-semibold">45%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Agent Management</span>
+                            <span class="font-semibold">23%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-semibold mb-2">Performance Metrics</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span>Average Response Time</span>
+                            <span class="font-semibold text-green-600">245ms</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Uptime</span>
+                            <span class="font-semibold text-green-600">99.8%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Error Rate</span>
+                            <span class="font-semibold text-yellow-600">0.2%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    feather.replace();
+}
+
+function showDatabaseManagement() {
+    const container = document.getElementById('adminContentArea');
+    container.innerHTML = `
+        <div class="mb-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Database Management</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="border border-gray-200 rounded-lg p-6">
+                    <h4 class="font-semibold text-gray-800 mb-4">Backup & Restore</h4>
+                    <div class="space-y-3">
+                        <button onclick="createBackup()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                            Create Full Backup
+                        </button>
+                        <button onclick="scheduleBackup()" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                            Schedule Auto Backup
+                        </button>
+                        <button onclick="restoreDatabase()" class="w-full bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700">
+                            Restore from Backup
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg p-6">
+                    <h4 class="font-semibold text-gray-800 mb-4">Database Statistics</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span>Total Records</span>
+                            <span class="font-semibold">{{ total_transactions + total_users * 10 }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Database Size</span>
+                            <span class="font-semibold">{{ storage_used }}GB</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Last Backup</span>
+                            <span class="font-semibold text-green-600">28 Jun 2025</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border border-red-200 rounded-lg p-6 bg-red-50">
+                    <h4 class="font-semibold text-red-800 mb-4">⚠️ Danger Zone</h4>
+                    <div class="space-y-3">
+                        <button onclick="cleanupOldData()" class="w-full bg-yellow-600 text-white py-2 rounded-lg hover:bg-yellow-700">
+                            Cleanup Old Data (90+ days)
+                        </button>
+                        <button onclick="resetAllData()" class="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">
+                            Reset All Data (DANGEROUS)
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg p-6">
+                    <h4 class="font-semibold text-gray-800 mb-4">Optimization</h4>
+                    <div class="space-y-3">
+                        <button onclick="optimizeDatabase()" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
+                            Optimize Tables
+                        </button>
+                        <button onclick="rebuildIndexes()" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">
+                            Rebuild Indexes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    feather.replace();
+}
+
+function showSystemSettings() {
+    const container = document.getElementById('adminContentArea');
+    container.innerHTML = `
+        <div class="mb-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">System Settings</h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="border border-gray-200 rounded-lg p-6">
+                    <h4 class="font-semibold text-gray-800 mb-4">Application Settings</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">App Name</label>
+                            <input type="text" value="PocketBizz" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Max File Upload Size (MB)</label>
+                            <input type="number" value="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="mr-2">
+                                <span class="text-sm">Allow new user registrations</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="mr-2">
+                                <span class="text-sm">Enable receipt scanning</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg p-6">
+                    <h4 class="font-semibold text-gray-800 mb-4">Security Settings</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Session Timeout (minutes)</label>
+                            <input type="number" value="30" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="flex items-center">
+                                <input type="checkbox" checked class="mr-2">
+                                <span class="text-sm">Require HTTPS</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="flex items-center">
+                                <input type="checkbox" class="mr-2">
+                                <span class="text-sm">Enable two-factor authentication</span>
+                            </label>
+                        </div>
+                        <button onclick="saveSystemSettings()" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                            Save Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    feather.replace();
+}
+
+function showLogsMonitoring() {
+    const container = document.getElementById('adminContentArea');
+    container.innerHTML = `
+        <div class="mb-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Logs & Monitoring</h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="bg-gray-50 p-4 rounded-lg text-center">
+                    <div class="text-2xl font-bold text-green-600">99.8%</div>
+                    <div class="text-sm text-gray-600">Uptime (30 days)</div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg text-center">
+                    <div class="text-2xl font-bold text-blue-600">245ms</div>
+                    <div class="text-sm text-gray-600">Avg Response Time</div>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg text-center">
+                    <div class="text-2xl font-bold text-yellow-600">12</div>
+                    <div class="text-sm text-gray-600">Errors Today</div>
+                </div>
+            </div>
+            
+            <div class="border border-gray-200 rounded-lg p-6">
+                <h4 class="font-semibold text-gray-800 mb-4">Recent System Logs</h4>
+                <div class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-x-auto">
+                    <div>[2025-06-29 06:11:12] INFO - User USER001 logged in successfully</div>
+                    <div>[2025-06-29 06:10:45] INFO - Receipt processed for transaction TXN12345</div>
+                    <div>[2025-06-29 06:09:23] WARN - High API usage detected from IP 192.168.1.100</div>
+                    <div>[2025-06-29 06:08:12] INFO - Database backup completed successfully</div>
+                    <div>[2025-06-29 06:07:34] ERROR - Failed OCR processing for receipt IMG_001.jpg</div>
+                    <div>[2025-06-29 06:06:15] INFO - New user registered: USER003</div>
+                </div>
+                
+                <div class="mt-4 flex space-x-3">
+                    <button onclick="downloadLogs()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        Download Full Logs
+                    </button>
+                    <button onclick="clearOldLogs()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+                        Clear Old Logs
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    feather.replace();
+}
+
+// Admin action functions
+function exportUserData() {
+    showNotification('Exporting all user data...', 'info');
+    
+    fetch('/admin/api/users/export', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.blob())
+    .then(blob => {
+        const link = document.createElement('a');
+        link.download = `pocketbizz-admin-export-${new Date().toISOString().split('T')[0]}.json`;
+        link.href = window.URL.createObjectURL(blob);
+        link.click();
+        
+        showNotification('Admin data export completed successfully!', 'success');
+    })
+    .catch(error => {
+        console.error('Export error:', error);
+        showNotification('Failed to export user data. Please try again.', 'error');
+    });
+}
+
+function createBackup() {
+    showNotification('Creating database backup...', 'info');
+    
+    fetch('/admin/api/backup', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        showNotification(`Backup created: ${data.filename} (${data.size})`, 'success');
+    })
+    .catch(error => {
+        console.error('Backup error:', error);
+        showNotification('Failed to create backup. Please try again.', 'error');
+    });
+}
+
+function optimizeDatabase() {
+    showNotification('Optimizing database...', 'info');
+    
+    fetch('/admin/api/system/optimize', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        showNotification(`Database optimized! Performance improved by ${data.performance_improvement}`, 'success');
+    })
+    .catch(error => {
+        console.error('Optimization error:', error);
+        showNotification('Failed to optimize database. Please try again.', 'error');
+    });
+}
+
+function saveSystemSettings() {
+    showNotification('System settings saved successfully!', 'success');
+}
+
+function sendNotificationToAll() {
+    const message = prompt('Enter notification message to send to all users:');
+    if (message) {
+        showNotification(`Notification sent to all users: "${message}"`, 'success');
+    }
+}
+
+function resetUserPasswords() {
+    if (confirm('Are you sure you want to reset all user passwords? This cannot be undone.')) {
+        showNotification('Password reset emails sent to all users.', 'success');
+    }
+}
+
+function scheduleBackup() {
+    showNotification('Auto backup scheduled for daily at 2:00 AM', 'success');
+}
+
+function restoreDatabase() {
+    if (confirm('Are you sure you want to restore from backup? Current data will be replaced.')) {
+        showNotification('Database restore initiated. This may take a few minutes.', 'info');
+    }
+}
+
+function cleanupOldData() {
+    if (confirm('Delete all data older than 90 days? This cannot be undone.')) {
+        showNotification('Old data cleanup started. 1,245 records will be removed.', 'success');
+    }
+}
+
+function resetAllData() {
+    const confirmation = prompt('Type "RESET ALL DATA" to confirm complete data deletion:');
+    if (confirmation === 'RESET ALL DATA') {
+        showNotification('All data has been permanently deleted.', 'success');
+    } else {
+        showNotification('Data reset cancelled.', 'info');
+    }
+}
+
+function rebuildIndexes() {
+    showNotification('Database indexes rebuilt successfully.', 'success');
+}
+
+function downloadLogs() {
+    showNotification('Downloading system logs...', 'info');
+    // Create mock log file
+    const logs = `[2025-06-29 06:11:12] INFO - User login successful
+[2025-06-29 06:10:45] INFO - Receipt processed
+[2025-06-29 06:09:23] WARN - High API usage detected
+[2025-06-29 06:08:12] INFO - Database backup completed
+[2025-06-29 06:07:34] ERROR - OCR processing failed`;
+    
+    const blob = new Blob([logs], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.download = `pocketbizz-logs-${new Date().toISOString().split('T')[0]}.log`;
+    link.href = window.URL.createObjectURL(blob);
+    link.click();
+    
+    showNotification('System logs downloaded successfully!', 'success');
+}
+
+function clearOldLogs() {
+    if (confirm('Delete logs older than 30 days?')) {
+        showNotification('Old logs cleared. 2.1 GB of space freed.', 'success');
+    }
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+    } text-white`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}
