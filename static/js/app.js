@@ -647,3 +647,109 @@ window.App = {
     createMiniChart,
     initializePremiumEffects
 };
+
+// Enhanced notification system with admin controls
+function checkForNotifications() {
+    fetch('/api/check-notifications')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.notifications) {
+                data.notifications.forEach((notification, index) => {
+                    setTimeout(() => {
+                        showEnhancedNotification(notification);
+                    }, (index + 1) * 5000); // Stagger notifications by 5 seconds
+                });
+            }
+        })
+        .catch(error => {
+            console.log('Notification check failed, using fallback');
+            checkForNotificationsFallback();
+        });
+}
+
+// Show enhanced notification from API
+function showEnhancedNotification(notification) {
+    const notificationDiv = document.createElement('div');
+    notificationDiv.className = 'notification-popup fixed top-4 right-4 z-50 bg-white rounded-lg shadow-lg border-l-4 border-red-500 p-4 max-w-sm transform transition-all duration-300 translate-x-full';
+    
+    let actionButton = '';
+    if (notification.action === 'backup') {
+        actionButton = `<button onclick="handleBackupAction(); this.parentElement.parentElement.remove();" class="mt-2 bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">Backup Sekarang</button>`;
+    } else if (notification.action === 'whatsapp' && notification.url) {
+        actionButton = `<a href="${notification.url}" target="_blank" class="mt-2 bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 inline-block">Hubungi Support</a>`;
+    } else if (notification.url) {
+        actionButton = `<a href="${notification.url}" class="mt-2 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 inline-block">Lihat</a>`;
+    }
+    
+    notificationDiv.innerHTML = `
+        <div class="flex justify-between items-start">
+            <div class="flex-1">
+                <h4 class="font-semibold text-gray-800">${notification.title}</h4>
+                <p class="text-sm text-gray-600 mt-1">${notification.message}</p>
+                ${actionButton}
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" class="text-gray-400 hover:text-gray-600 ml-2">
+                <i data-feather="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notificationDiv);
+    feather.replace();
+    
+    // Animate in
+    setTimeout(() => {
+        notificationDiv.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Auto remove after 10 seconds
+    setTimeout(() => {
+        if (notificationDiv.parentNode) {
+            notificationDiv.classList.add('translate-x-full');
+            setTimeout(() => {
+                if (notificationDiv.parentNode) {
+                    notificationDiv.remove();
+                }
+            }, 300);
+        }
+    }, 10000);
+}
+
+// Fallback notification system for old behavior
+function checkForNotificationsFallback() {
+    const lastBackupCheck = localStorage.getItem('lastBackupReminder');
+    const lastWhatsAppReminder = localStorage.getItem('lastWhatsAppReminder');
+    const now = Date.now();
+    
+    // Show backup reminder every 48 hours
+    if (!lastBackupCheck || now - parseInt(lastBackupCheck) > 48 * 60 * 60 * 1000) {
+        setTimeout(() => {
+            showBackupReminder();
+            localStorage.setItem('lastBackupReminder', now.toString());
+        }, 5000);
+    }
+    
+    // Show WhatsApp support reminder every 72 hours
+    if (!lastWhatsAppReminder || now - parseInt(lastWhatsAppReminder) > 72 * 60 * 60 * 1000) {
+        setTimeout(() => {
+            showWhatsAppSupport();
+            localStorage.setItem('lastWhatsAppReminder', now.toString());
+        }, 15000);
+    }
+}
+
+// Handle backup action
+function handleBackupAction() {
+    showNotification('Backup dimulakan...', 'info');
+    // Redirect to admin backup page or trigger backup
+    window.location.href = '/admin';
+}
+
+// Initialize enhanced notifications
+document.addEventListener('DOMContentLoaded', function() {
+    // Check for notifications on page load
+    checkForNotifications();
+    
+    // Set up periodic notification checks (every 30 minutes)
+    setInterval(checkForNotifications, 30 * 60 * 1000);
+});
