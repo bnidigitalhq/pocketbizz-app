@@ -344,7 +344,8 @@ function initializeCenterFAB() {
         }
     });
 
-    function closeCenterFAB() {
+    // Make closeCenterFAB available globally
+    window.closeCenterFAB = function() {
         isCenterMenuOpen = false;
         centerFabIcon.style.transform = 'rotate(0deg)';
         centerFab.style.transform = 'scale(1)';

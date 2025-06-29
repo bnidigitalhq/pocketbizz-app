@@ -57,7 +57,7 @@
             <!-- Channel Selection -->
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Saluran</label>
-                <div class="grid grid-cols-2 gap-3">
+                <div id="incomeChannels" class="grid grid-cols-2 gap-3">
                     <button type="button" onclick="selectChannel('shopee')" data-channel="shopee" class="channel-btn p-3 border border-gray-200 rounded-xl text-center transition-all duration-200 hover:border-orange-300 hover:bg-orange-50">
                         <span class="text-2xl mb-1 block">🛒</span>
                         <span class="text-sm font-medium text-gray-700">Shopee</span>
@@ -73,6 +73,24 @@
                     <button type="button" onclick="selectChannel('agent')" data-channel="agent" class="channel-btn p-3 border border-gray-200 rounded-xl text-center transition-all duration-200 hover:border-green-300 hover:bg-green-50">
                         <span class="text-2xl mb-1 block">👥</span>
                         <span class="text-sm font-medium text-gray-700">Agent</span>
+                    </button>
+                </div>
+                <div id="expenseChannels" class="grid grid-cols-2 gap-3 hidden">
+                    <button type="button" onclick="selectChannel('supplier')" data-channel="supplier" class="channel-btn p-3 border border-gray-200 rounded-xl text-center transition-all duration-200 hover:border-blue-300 hover:bg-blue-50">
+                        <span class="text-2xl mb-1 block">🏭</span>
+                        <span class="text-sm font-medium text-gray-700">Pembekal</span>
+                    </button>
+                    <button type="button" onclick="selectChannel('operational')" data-channel="operational" class="channel-btn p-3 border border-gray-200 rounded-xl text-center transition-all duration-200 hover:border-gray-300 hover:bg-gray-50">
+                        <span class="text-2xl mb-1 block">⚙️</span>
+                        <span class="text-sm font-medium text-gray-700">Operasi</span>
+                    </button>
+                    <button type="button" onclick="selectChannel('marketing')" data-channel="marketing" class="channel-btn p-3 border border-gray-200 rounded-xl text-center transition-all duration-200 hover:border-purple-300 hover:bg-purple-50">
+                        <span class="text-2xl mb-1 block">📢</span>
+                        <span class="text-sm font-medium text-gray-700">Marketing</span>
+                    </button>
+                    <button type="button" onclick="selectChannel('office')" data-channel="office" class="channel-btn p-3 border border-gray-200 rounded-xl text-center transition-all duration-200 hover:border-green-300 hover:bg-green-50">
+                        <span class="text-2xl mb-1 block">🏢</span>
+                        <span class="text-sm font-medium text-gray-700">Pejabat</span>
                     </button>
                 </div>
                 <input type="hidden" id="quickChannel" value="walkin">
@@ -143,13 +161,39 @@ function setTransactionType(type) {
     
     const incomeBtn = document.getElementById('incomeToggle');
     const expenseBtn = document.getElementById('expenseToggle');
+    const incomeChannels = document.getElementById('incomeChannels');
+    const expenseChannels = document.getElementById('expenseChannels');
+    const descriptionInput = document.getElementById('quickDescription');
     
     if (type === 'income') {
+        // Update button styles
         incomeBtn.className = 'flex-1 py-3 px-4 rounded-lg transition-all duration-200 font-semibold text-sm bg-green-500 text-white';
         expenseBtn.className = 'flex-1 py-3 px-4 rounded-lg transition-all duration-200 font-semibold text-sm text-gray-600 hover:text-gray-800';
+        
+        // Show income channels, hide expense channels
+        incomeChannels.classList.remove('hidden');
+        expenseChannels.classList.add('hidden');
+        
+        // Update placeholder text for income
+        descriptionInput.placeholder = 'Contoh: Jualan produk A, Commission dari agent...';
+        
+        // Set default channel for income
+        selectChannel('walkin');
+        
     } else {
+        // Update button styles
         expenseBtn.className = 'flex-1 py-3 px-4 rounded-lg transition-all duration-200 font-semibold text-sm bg-red-500 text-white';
         incomeBtn.className = 'flex-1 py-3 px-4 rounded-lg transition-all duration-200 font-semibold text-sm text-gray-600 hover:text-gray-800';
+        
+        // Show expense channels, hide income channels
+        expenseChannels.classList.remove('hidden');
+        incomeChannels.classList.add('hidden');
+        
+        // Update placeholder text for expense
+        descriptionInput.placeholder = 'Contoh: Beli stock, Sewa kedai, Internet bill...';
+        
+        // Set default channel for expense
+        selectChannel('operational');
     }
 }
 
