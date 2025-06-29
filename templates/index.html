@@ -302,4 +302,19 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/csv_upload.js') }}"></script>
+<script>
+// Check if admin notification settings exist in database and set localStorage flag
+fetch('/api/check-notifications')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.settings && data.settings.id) {
+            // Admin settings exist, set flag to disable fallback system
+            localStorage.setItem('admin_notifications_disabled', 'true');
+            console.log('Admin notification settings detected, fallback system disabled');
+        }
+    })
+    .catch(error => {
+        console.log('Could not check notification settings:', error);
+    });
+</script>
 {% endblock %}

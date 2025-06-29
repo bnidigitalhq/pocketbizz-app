@@ -720,6 +720,12 @@ function showEnhancedNotification(notification) {
 
 // Fallback notification system for old behavior
 function checkForNotificationsFallback() {
+    // Check if admin has configured notifications - if yes, don't use fallback
+    if (localStorage.getItem('admin_notifications_disabled') === 'true') {
+        console.log('Admin notifications configured, skipping fallback system');
+        return;
+    }
+    
     const lastBackupCheck = localStorage.getItem('lastBackupReminder');
     const lastWhatsAppReminder = localStorage.getItem('lastWhatsAppReminder');
     const now = Date.now();
