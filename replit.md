@@ -200,3 +200,5 @@ The application is built with Flask backend and designed with a user experience 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Authentication: Will use Supabase authentication system (implement later)
+Admin Panel: Currently accessible without authentication for testing, will be restricted to admin users only after Supabase auth implementation
