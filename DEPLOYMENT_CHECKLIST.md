@@ -10,7 +10,7 @@
 
 ### ✅ Step 2: Create Repository
 1. Click "New repository"
-2. Repository name: `pocketbizz-deployment`
+2. Repository name: `pocketbizz-app`
 3. Set to Public (required for free Vercel)
 4. Add README.md
 5. Click "Create repository"
@@ -34,7 +34,7 @@
 ```bash
 # Initialize git if not done
 git init
-git remote add origin https://github.com/YOUR_USERNAME/pocketbizz-deployment.git
+git remote add origin https://github.com/YOUR_USERNAME/pocketbizz-app.git
 
 # Push current code
 git add .
