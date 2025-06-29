@@ -142,9 +142,16 @@ Replace Flask template variables with JavaScript API calls:
 - Use for testing new features
 - Push changes to GitHub when ready
 
-### 2. Deployment Pipeline
+### 2. Manual Deployment Pipeline (Recommended)
 ```
-Replit Development → GitHub → Auto-deploy to Vercel/Railway
+Replit Development → Manual Git Push → GitHub → Auto-deploy to Vercel/Railway
+```
+
+**Deployment Commands in Replit:**
+```bash
+git add .
+git commit -m "Update: describe your changes"
+git push origin main
 ```
 
 ### 3. Environment Management
