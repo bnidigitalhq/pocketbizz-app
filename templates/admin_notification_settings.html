@@ -289,6 +289,11 @@
     <script>
         // Initialize Feather icons
         feather.replace();
+        
+        // Clear old notification system when page loads
+        localStorage.removeItem('lastBackupReminder');
+        localStorage.removeItem('lastWhatsAppReminder');
+        localStorage.setItem('admin_notifications_disabled', 'true');
 
         // Test notification function
         function testNotification(type) {

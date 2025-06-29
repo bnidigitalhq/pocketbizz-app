@@ -1813,11 +1813,17 @@ def api_check_notifications():
         notifications_to_show = []
         current_time = datetime.utcnow()
         
-        # Check backup reminder
+        # Check backup reminder (only if enabled)
         if settings.backup_reminder_enabled:
-            if (not settings.last_backup_reminder or 
-                (current_time - settings.last_backup_reminder).total_seconds() >= 
-                settings.backup_reminder_interval_hours * 3600):
+            should_show_backup = False
+            if not settings.last_backup_reminder:
+                should_show_backup = True
+            else:
+                time_diff = (current_time - settings.last_backup_reminder).total_seconds()
+                if time_diff >= settings.backup_reminder_interval_hours * 3600:
+                    should_show_backup = True
+            
+            if should_show_backup:
                 notifications_to_show.append({
                     'type': 'backup_reminder',
                     'title': '💾 Backup Data',
@@ -1828,11 +1834,17 @@ def api_check_notifications():
                 settings.last_backup_reminder = current_time
                 db.session.commit()
         
-        # Check WhatsApp support reminder
+        # Check WhatsApp support reminder (only if enabled)
         if settings.whatsapp_support_enabled:
-            if (not settings.last_whatsapp_reminder or 
-                (current_time - settings.last_whatsapp_reminder).total_seconds() >= 
-                settings.whatsapp_support_interval_hours * 3600):
+            should_show_whatsapp = False
+            if not settings.last_whatsapp_reminder:
+                should_show_whatsapp = True
+            else:
+                time_diff = (current_time - settings.last_whatsapp_reminder).total_seconds()
+                if time_diff >= settings.whatsapp_support_interval_hours * 3600:
+                    should_show_whatsapp = True
+            
+            if should_show_whatsapp:
                 notifications_to_show.append({
                     'type': 'whatsapp_support',
                     'title': '💬 Sokongan WhatsApp',
@@ -1844,12 +1856,17 @@ def api_check_notifications():
                 settings.last_whatsapp_reminder = current_time
                 db.session.commit()
         
-        # Check low stock alerts
+        # Check low stock alerts (only if enabled)
         if settings.low_stock_alerts_enabled:
-            if (not settings.last_low_stock_check or 
-                (current_time - settings.last_low_stock_check).total_seconds() >= 
-                settings.low_stock_check_interval_hours * 3600):
-                
+            should_check_stock = False
+            if not settings.last_low_stock_check:
+                should_check_stock = True
+            else:
+                time_diff = (current_time - settings.last_low_stock_check).total_seconds()
+                if time_diff >= settings.low_stock_check_interval_hours * 3600:
+                    should_check_stock = True
+            
+            if should_check_stock:
                 low_stock_products = Product.query.filter(
                     Product.current_stock <= Product.minimum_stock,
                     Product.is_active == True

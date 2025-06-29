@@ -662,8 +662,11 @@ function checkForNotifications() {
             }
         })
         .catch(error => {
-            console.log('Notification check failed, using fallback');
-            checkForNotificationsFallback();
+            console.log('Notification check failed:', error);
+            // Only use fallback if there's no admin settings (first time users)
+            if (!localStorage.getItem('admin_notifications_disabled')) {
+                checkForNotificationsFallback();
+            }
         });
 }
 
@@ -743,6 +746,13 @@ function handleBackupAction() {
     showNotification('Backup dimulakan...', 'info');
     // Redirect to admin backup page or trigger backup
     window.location.href = '/admin';
+}
+
+// Clear old notification timers and localStorage if disabled
+function disableOldNotifications() {
+    localStorage.removeItem('lastBackupReminder');
+    localStorage.removeItem('lastWhatsAppReminder');
+    localStorage.setItem('admin_notifications_disabled', 'true');
 }
 
 // Initialize enhanced notifications
