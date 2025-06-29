@@ -248,9 +248,24 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/compliance.js') }}"></script>
-<script src="{{ url_for('static', filename='js/advanced_analytics.js') }}"></script>
-<script src="{{ url_for('static', filename='js/voice_input.js') }}"></script>
-<script src="{{ url_for('static', filename='js/offline.js') }}"></script>
-<script src="{{ url_for('static', filename='js/whatsapp_integration.js') }}"></script>
+<script>
+// Initialize functions when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Ensure functions are available
+    window.initializeComplianceManager = function() {
+        if (typeof ComplianceManager !== 'undefined') {
+            const compliance = new ComplianceManager();
+            compliance.setupPDPAControls();
+            compliance.setupLHDNReports();
+        }
+    };
+    
+    window.initializeAdvancedAnalytics = function() {
+        if (typeof AdvancedAnalytics !== 'undefined') {
+            const analytics = new AdvancedAnalytics();
+            analytics.initializeAnalytics();
+        }
+    };
+});
+</script>
 {% endblock %}
