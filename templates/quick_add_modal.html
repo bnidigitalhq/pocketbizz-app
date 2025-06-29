@@ -186,8 +186,9 @@ function setTransactionType(type) {
         incomeBtn.className = 'flex-1 py-3 px-4 rounded-lg transition-all duration-200 font-semibold text-sm text-gray-600 hover:text-gray-800';
         
         // Show expense channels, hide income channels
-        expenseChannels.classList.remove('hidden');
+        console.log('Setting expense mode - hiding income channels, showing expense channels');
         incomeChannels.classList.add('hidden');
+        expenseChannels.classList.remove('hidden');
         
         // Update placeholder text for expense
         descriptionInput.placeholder = 'Contoh: Beli stock, Sewa kedai, Internet bill...';
@@ -208,8 +209,12 @@ function selectChannel(channel) {
     });
     
     const selectedBtn = document.querySelector(`[data-channel="${channel}"]`);
-    selectedBtn.classList.remove('border-gray-200');
-    selectedBtn.classList.add('border-red-500', 'bg-red-50', 'ring-2', 'ring-red-200');
+    if (selectedBtn) {
+        selectedBtn.classList.remove('border-gray-200');
+        selectedBtn.classList.add('border-red-500', 'bg-red-50', 'ring-2', 'ring-red-200');
+    } else {
+        console.log(`Channel button for ${channel} not found in current view`);
+    }
 }
 
 function submitQuickTransaction(event) {
