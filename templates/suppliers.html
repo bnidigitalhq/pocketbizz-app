@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Pembekal - PocketBizz{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-4">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Pengurusan Pembekal</h1>
+            <p class="text-gray-600">Urus maklumat pembekal dan vendor</p>
+        </div>
+        <button onclick="showAddSupplierForm()" class="bg-shopee-orange text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors">
+            <i data-feather="plus" class="w-5 h-5 inline mr-2"></i>
+            Tambah Pembekal
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Jumlah Pembekal</p>
+                    <p class="text-3xl font-bold text-blue-600">{{ suppliers|length }}</p>
+                </div>
+                <div class="p-3 rounded-full bg-blue-100">
+                    <i data-feather="users" class="w-6 h-6 text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Pembekal Aktif</p>
+                    <p class="text-3xl font-bold text-green-600">{{ active_suppliers }}</p>
+                </div>
+                <div class="p-3 rounded-full bg-green-100">
+                    <i data-feather="check-circle" class="w-6 h-6 text-green-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">PO Belum Selesai</p>
+                    <p class="text-3xl font-bold text-yellow-600">{{ pending_orders }}</p>
+                </div>
+                <div class="p-3 rounded-full bg-yellow-100">
+                    <i data-feather="clock" class="w-6 h-6 text-yellow-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Rating Purata</p>
+                    <p class="text-3xl font-bold text-purple-600">{{ avg_rating }}</p>
+                </div>
+                <div class="p-3 rounded-full bg-purple-100">
+                    <i data-feather="star" class="w-6 h-6 text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supplier List -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">Senarai Pembekal</h3>
+                <div class="flex space-x-2">
+                    <button onclick="showPurchaseOrderForm()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                        <i data-feather="shopping-cart" class="w-4 h-4 inline mr-2"></i>
+                        Buat Purchase Order
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pembekal</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Maklumat Hubungan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produk</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for supplier in suppliers %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">{{ supplier.name }}</div>
+                                <div class="text-sm text-gray-500">{{ supplier.company_name or 'Tiada maklumat syarikat' }}</div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">{{ supplier.contact_person or 'Tiada nama' }}</div>
+                            <div class="text-sm text-gray-500">{{ supplier.phone or 'Tiada telefon' }}</div>
+                            <div class="text-sm text-gray-500">{{ supplier.email or 'Tiada email' }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if supplier.status == 'active' %}
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Aktif</span>
+                            {% elif supplier.status == 'inactive' %}
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Tidak Aktif</span>
+                            {% else %}
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Blacklisted</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <span class="text-sm font-medium text-gray-900">{{ "%.1f"|format(supplier.rating) }}</span>
+                                <div class="ml-2">
+                                    {% for i in range(5) %}
+                                        {% if i < supplier.rating %}
+                                        <i data-feather="star" class="w-4 h-4 text-yellow-400 fill-current inline"></i>
+                                        {% else %}
+                                        <i data-feather="star" class="w-4 h-4 text-gray-300 inline"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                                {{ supplier.products|length }} produk
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <button onclick="editSupplier({{ supplier.id }})" class="text-blue-600 hover:text-blue-900">Edit</button>
+                                <button onclick="viewSupplierDetails({{ supplier.id }})" class="text-green-600 hover:text-green-900">Lihat</button>
+                                <button onclick="createPO({{ supplier.id }})" class="text-purple-600 hover:text-purple-900">PO</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Supplier Modal -->
+<div id="addSupplierModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Tambah Pembekal Baru</h3>
+                <button onclick="hideAddSupplierForm()" class="text-gray-400 hover:text-gray-600">
+                    <i data-feather="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <form method="POST" action="{{ url_for('add_supplier') }}" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Pembekal *</label>
+                    <input type="text" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Syarikat</label>
+                    <input type="text" name="company_name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Hubungan</label>
+                    <input type="text" name="contact_person" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Telefon</label>
+                        <input type="tel" name="phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" name="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
+                    <textarea name="address" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Terma Pembayaran</label>
+                    <select name="payment_terms" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                        <option value="cash">Tunai</option>
+                        <option value="30_days">30 Hari</option>
+                        <option value="60_days">60 Hari</option>
+                        <option value="90_days">90 Hari</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">No. SSM/Tax ID</label>
+                    <input type="text" name="tax_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Catatan</label>
+                    <textarea name="notes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent"></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="hideAddSupplierForm()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-shopee-orange text-white rounded-lg hover:bg-orange-600">
+                        Simpan Pembekal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showAddSupplierForm() {
+    document.getElementById('addSupplierModal').classList.remove('hidden');
+}
+
+function hideAddSupplierForm() {
+    document.getElementById('addSupplierModal').classList.add('hidden');
+}
+
+function editSupplier(supplierId) {
+    // Implementation for editing supplier
+    showNotification(`Edit pembekal ID: ${supplierId}`, 'info');
+}
+
+function viewSupplierDetails(supplierId) {
+    // Implementation for viewing supplier details
+    showNotification(`Lihat pembekal ID: ${supplierId}`, 'info');
+}
+
+function createPO(supplierId) {
+    // Implementation for creating purchase order
+    showNotification(`Buat PO untuk pembekal ID: ${supplierId}`, 'info');
+}
+
+function showPurchaseOrderForm() {
+    showNotification('Purchase Order form akan dibuka', 'info');
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+    } text-white`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

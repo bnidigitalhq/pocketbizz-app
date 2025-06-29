@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}Varian Produk - PocketBizz{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-4">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800">Pengurusan Varian Produk</h1>
+            <p class="text-gray-600">Urus saiz, warna, dan varian produk</p>
+        </div>
+        <button onclick="showAddVariantForm()" class="bg-shopee-orange text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-colors">
+            <i data-feather="plus" class="w-5 h-5 inline mr-2"></i>
+            Tambah Varian
+        </button>
+    </div>
+
+    <!-- Product Selection -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex items-center space-x-4">
+            <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Produk</label>
+                <select id="productSelect" onchange="loadProductVariants()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                    <option value="">-- Pilih Produk --</option>
+                    {% for product in products %}
+                    <option value="{{ product.id }}" {% if selected_product and selected_product.id == product.id %}selected{% endif %}>
+                        {{ product.name }} ({{ product.sku }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="enableVariants()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    <i data-feather="layers" class="w-4 h-4 inline mr-2"></i>
+                    Aktifkan Varian
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {% if selected_product %}
+    <!-- Product Info -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex items-center space-x-6">
+            <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-800">{{ selected_product.name }}</h3>
+                <p class="text-gray-600">SKU: {{ selected_product.sku }}</p>
+                <p class="text-sm text-gray-500">{{ selected_product.description or 'Tiada penerangan' }}</p>
+            </div>
+            <div class="text-right">
+                {% if selected_product.has_variants %}
+                <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
+                    <i data-feather="check" class="w-4 h-4 mr-1"></i>
+                    Varian Aktif
+                </span>
+                {% else %}
+                <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full bg-gray-100 text-gray-800">
+                    <i data-feather="minus" class="w-4 h-4 mr-1"></i>
+                    Tiada Varian
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Variants List -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">Varian Produk</h3>
+                <div class="text-sm text-gray-600">
+                    {{ variants|length }} varian dijumpai
+                </div>
+            </div>
+        </div>
+        
+        {% if variants %}
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Varian</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Atribut</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stok</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for variant in variants %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-gray-900">{{ variant.variant_name }}</div>
+                            {% if variant.barcode %}
+                            <div class="text-xs text-gray-500">Barcode: {{ variant.barcode }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">{{ variant.sku }}</td>
+                        <td class="px-6 py-4">
+                            <div class="space-y-1">
+                                {% if variant.color %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
+                                    <div class="w-2 h-2 rounded-full mr-1" style="background-color: {{ variant.color.lower() }}"></div>
+                                    {{ variant.color }}
+                                </span>
+                                {% endif %}
+                                {% if variant.size %}
+                                <span class="inline-flex px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                                    Saiz: {{ variant.size }}
+                                </span>
+                                {% endif %}
+                                {% if variant.material %}
+                                <span class="inline-flex px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                                    {{ variant.material }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">
+                                <div>Jual: RM {{ "%.2f"|format(variant.selling_price) }}</div>
+                                <div class="text-xs text-gray-500">Kos: RM {{ "%.2f"|format(variant.cost_price) }}</div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-medium {% if variant.is_low_stock %}text-error-red{% else %}text-gray-800{% endif %}">
+                                    {{ variant.current_stock }}
+                                </span>
+                                {% if variant.is_low_stock %}
+                                <i data-feather="alert-triangle" class="w-4 h-4 text-error-red"></i>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if variant.is_active %}
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Aktif</span>
+                            {% else %}
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Tidak Aktif</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <button onclick="editVariant({{ variant.id }})" class="text-blue-600 hover:text-blue-900">Edit</button>
+                                <button onclick="adjustStock({{ variant.id }})" class="text-green-600 hover:text-green-900">Stok</button>
+                                <button onclick="deleteVariant({{ variant.id }})" class="text-red-600 hover:text-red-900">Hapus</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <i data-feather="package" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-600 mb-2">Tiada Varian</h3>
+            <p class="text-gray-500 mb-4">Produk ini belum mempunyai varian. Tambah varian untuk mengurus saiz, warna, dan lain-lain.</p>
+            <button onclick="showAddVariantForm()" class="bg-shopee-orange text-white px-4 py-2 rounded-lg hover:bg-orange-600">
+                Tambah Varian Pertama
+            </button>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Variant Modal -->
+<div id="addVariantModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Tambah Varian Baru</h3>
+                <button onclick="hideAddVariantForm()" class="text-gray-400 hover:text-gray-600">
+                    <i data-feather="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <form method="POST" action="{{ url_for('add_product_variant') }}" class="space-y-4">
+                <input type="hidden" name="product_id" id="variantProductId" value="{{ selected_product.id if selected_product }}">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Varian *</label>
+                    <input type="text" name="variant_name" required placeholder="Contoh: Merah - Size L" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">SKU Varian</label>
+                    <input type="text" name="sku" placeholder="Auto-generate jika kosong" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Warna</label>
+                        <input type="text" name="color" placeholder="Merah, Biru, Hijau" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Saiz</label>
+                        <input type="text" name="size" placeholder="S, M, L, XL" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Berat (kg)</label>
+                        <input type="number" name="weight" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Bahan</label>
+                        <input type="text" name="material" placeholder="Kain, Plastik, Logam" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Harga Kos (RM) *</label>
+                        <input type="number" name="cost_price" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Harga Jual (RM) *</label>
+                        <input type="number" name="selling_price" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Stok Awal</label>
+                        <input type="number" name="current_stock" value="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Stok Minimum</label>
+                        <input type="number" name="minimum_stock" value="5" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Barcode</label>
+                    <input type="text" name="barcode" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-shopee-orange focus:border-transparent">
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" onclick="hideAddVariantForm()" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-shopee-orange text-white rounded-lg hover:bg-orange-600">
+                        Simpan Varian
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function loadProductVariants() {
+    const productId = document.getElementById('productSelect').value;
+    if (productId) {
+        window.location.href = `{{ url_for('product_variants') }}?product_id=${productId}`;
+    } else {
+        window.location.href = `{{ url_for('product_variants') }}`;
+    }
+}
+
+function enableVariants() {
+    const productId = document.getElementById('productSelect').value;
+    if (!productId) {
+        showNotification('Sila pilih produk terlebih dahulu', 'error');
+        return;
+    }
+    
+    fetch(`/api/products/${productId}/enable-variants`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Varian telah diaktifkan untuk produk ini', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification(data.message || 'Gagal mengaktifkan varian', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Ralat berlaku. Sila cuba lagi.', 'error');
+    });
+}
+
+function showAddVariantForm() {
+    const productId = document.getElementById('productSelect').value;
+    if (!productId) {
+        showNotification('Sila pilih produk terlebih dahulu', 'error');
+        return;
+    }
+    
+    document.getElementById('variantProductId').value = productId;
+    document.getElementById('addVariantModal').classList.remove('hidden');
+}
+
+function hideAddVariantForm() {
+    document.getElementById('addVariantModal').classList.add('hidden');
+}
+
+function editVariant(variantId) {
+    showNotification(`Edit varian ID: ${variantId}`, 'info');
+}
+
+function adjustStock(variantId) {
+    const newStock = prompt('Masukkan kuantiti stok baru:');
+    if (newStock !== null && !isNaN(newStock)) {
+        showNotification(`Stok varian ID ${variantId} dikemaskini kepada ${newStock}`, 'success');
+    }
+}
+
+function deleteVariant(variantId) {
+    if (confirm('Adakah anda pasti ingin hapus varian ini?')) {
+        showNotification(`Varian ID ${variantId} telah dihapus`, 'success');
+    }
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+    } text-white`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}
