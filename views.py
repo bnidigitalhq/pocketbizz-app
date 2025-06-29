@@ -2,7 +2,7 @@ import csv
 import io
 import os
 from datetime import datetime, timedelta
-from flask import render_template, request, redirect, url_for, flash, jsonify, make_response
+from flask import render_template, request, redirect, url_for, flash, jsonify, make_response, send_file
 from werkzeug.utils import secure_filename
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib import colors
@@ -1281,3 +1281,203 @@ def api_generate_lhdn_report():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/smart-receipt-process', methods=['POST'])
+def api_smart_receipt_process():
+    """Process receipt with smart categorization and organize files"""
+    try:
+        data = request.get_json()
+        
+        # Extract receipt data
+        ocr_text = data.get('ocrText', '')
+        image_data = data.get('imageData', '')  # Base64 image
+        
+        # Smart categorization logic
+        category = categorize_receipt_smart(ocr_text)
+        vendor = extract_vendor_from_text(ocr_text)
+        amount = extract_amount_from_text(ocr_text)
+        date_found = extract_date_from_text(ocr_text)
+        
+        # Generate organized filename
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        vendor_clean = ''.join(c for c in vendor if c.isalnum() or c in '-_')[:20]
+        filename = f"resit_{timestamp}_{vendor_clean}_RM{amount:.2f}.pdf"
+        
+        # Create category folder path
+        category_folder = os.path.join('static', 'receipts', category)
+        os.makedirs(category_folder, exist_ok=True)
+        
+        file_path = os.path.join(category_folder, filename)
+        
+        # For now, create a simple text-based PDF since we don't have the actual image
+        # In production, you would save the actual PDF here
+        with open(file_path, 'w') as f:
+            f.write(f"Receipt PDF placeholder\nVendor: {vendor}\nAmount: RM {amount}\nDate: {date_found}\nCategory: {category}")
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'vendor': vendor,
+                'amount': amount,
+                'date': date_found,
+                'category': category,
+                'filename': filename,
+                'file_path': file_path,
+                'view_url': f'/view-receipt/{category}/{filename}'
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/view-receipt/<category>/<filename>')
+def view_receipt(category, filename):
+    """View organized receipt PDF"""
+    try:
+        file_path = os.path.join('static', 'receipts', category, filename)
+        
+        if os.path.exists(file_path):
+            return send_file(file_path, as_attachment=False)
+        else:
+            flash('Receipt file not found')
+            return redirect(url_for('index'))
+            
+    except Exception as e:
+        flash(f'Error viewing receipt: {str(e)}')
+        return redirect(url_for('index'))
+
+@app.route('/api/receipt-folders')
+def api_receipt_folders():
+    """Get organized receipt folders and files"""
+    try:
+        receipts_base = os.path.join('static', 'receipts')
+        folder_structure = {}
+        
+        if os.path.exists(receipts_base):
+            for category in os.listdir(receipts_base):
+                category_path = os.path.join(receipts_base, category)
+                if os.path.isdir(category_path):
+                    files = []
+                    for file in os.listdir(category_path):
+                        if file.endswith('.pdf'):
+                            file_path = os.path.join(category_path, file)
+                            file_stats = os.stat(file_path)
+                            files.append({
+                                'name': file,
+                                'size': file_stats.st_size,
+                                'created': datetime.fromtimestamp(file_stats.st_ctime).isoformat(),
+                                'url': f'/view-receipt/{category}/{file}'
+                            })
+                    
+                    folder_structure[category] = {
+                        'name': get_category_display_name(category),
+                        'count': len(files),
+                        'files': sorted(files, key=lambda x: x['created'], reverse=True)
+                    }
+        
+        return jsonify(folder_structure)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+def categorize_receipt_smart(ocr_text):
+    """Smart categorization based on OCR text"""
+    text = ocr_text.lower()
+    
+    # Category keywords mapping
+    categories = {
+        'makanan': ['restaurant', 'cafe', 'kedai makan', 'food', 'makan', 'restoran', 'mamak', 'mcd', 'kfc', 'pizza', 'burger', 'nasi', 'mee', 'kuih', 'minuman'],
+        'peralatan': ['hardware', 'tools', 'alat', 'peralatan', 'equipment', 'machinery', 'engine', 'motor', 'drill', 'hammer'],
+        'bekalan_pejabat': ['stationery', 'kertas', 'pen', 'paper', 'office', 'pejabat', 'supplies', 'printer', 'ink', 'stapler'],
+        'pengangkutan': ['petrol', 'minyak', 'transport', 'grab', 'taxi', 'toll', 'parking', 'bas', 'train', 'flight', 'fuel'],
+        'utiliti': ['electric', 'water', 'internet', 'phone', 'wifi', 'streamyx', 'celcom', 'maxis', 'digi', 'tnb', 'air', 'bill'],
+        'rawatan_kesihatan': ['hospital', 'clinic', 'doctor', 'ubat', 'medicine', 'pharmacy', 'dentist', 'medical', 'health'],
+        'pakaian': ['clothes', 'shirt', 'pants', 'shoes', 'fashion', 'baju', 'seluar', 'kasut', 'tudung', 'dress'],
+        'pemasaran': ['advertising', 'marketing', 'promotion', 'facebook', 'google', 'ads', 'banner', 'flyer', 'design'],
+        'sewa': ['rent', 'rental', 'sewa', 'office rent', 'shop rent', 'warehouse', 'premise'],
+        'insurans': ['insurance', 'insurans', 'takaful', 'coverage', 'policy', 'premium', 'protection']
+    }
+    
+    # Score each category
+    category_scores = {}
+    for category, keywords in categories.items():
+        score = sum(1 for keyword in keywords if keyword in text)
+        category_scores[category] = score
+    
+    # Return category with highest score, default to 'lain_lain'
+    best_category = max(category_scores.items(), key=lambda x: x[1])
+    return best_category[0] if best_category[1] > 0 else 'lain_lain'
+
+def extract_vendor_from_text(text):
+    """Extract vendor/business name from OCR text"""
+    lines = text.split('\n')
+    
+    # Look for vendor in first few lines
+    for line in lines[:5]:
+        line = line.strip()
+        if len(line) > 3 and len(line) < 50 and not line.isdigit():
+            # Skip lines that are mainly numbers/dates
+            if not any(char.isdigit() for char in line[:len(line)//2]):
+                return line.upper()
+    
+    return 'KEDAI TIDAK DIKENALI'
+
+def extract_amount_from_text(text):
+    """Extract amount from OCR text"""
+    import re
+    
+    # Look for RM patterns
+    patterns = [
+        r'rm\s*(\d+\.?\d*)',
+        r'(\d+\.?\d*)\s*rm',
+        r'total\s*:?\s*rm?\s*(\d+\.?\d*)',
+        r'jumlah\s*:?\s*rm?\s*(\d+\.?\d*)'
+    ]
+    
+    text_lower = text.lower()
+    
+    for pattern in patterns:
+        matches = re.findall(pattern, text_lower)
+        if matches:
+            try:
+                return float(matches[-1])  # Take the last (usually total) amount
+            except ValueError:
+                continue
+    
+    return 0.0
+
+def extract_date_from_text(text):
+    """Extract date from OCR text"""
+    import re
+    
+    # Date patterns
+    patterns = [
+        r'(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})',
+        r'(\d{1,2}\s\w+\s\d{4})',
+        r'(\d{2,4}[\/\-]\d{1,2}[\/\-]\d{1,2})'
+    ]
+    
+    for pattern in patterns:
+        matches = re.findall(pattern, text)
+        if matches:
+            return matches[0]
+    
+    return datetime.now().strftime('%d/%m/%Y')
+
+def get_category_display_name(category):
+    """Get display name for category"""
+    display_names = {
+        'makanan': 'Makanan & Minuman',
+        'peralatan': 'Peralatan & Jentera',
+        'bekalan_pejabat': 'Bekalan Pejabat',
+        'pengangkutan': 'Pengangkutan',
+        'utiliti': 'Utiliti & Bil',
+        'rawatan_kesihatan': 'Rawatan Kesihatan',
+        'pakaian': 'Pakaian & Aksesori',
+        'pemasaran': 'Pemasaran & Iklan',
+        'sewa': 'Sewa & Rental',
+        'insurans': 'Insurans & Takaful',
+        'lain_lain': 'Lain-lain'
+    }
+    
+    return display_names.get(category, 'Tidak Dikategorikan')
