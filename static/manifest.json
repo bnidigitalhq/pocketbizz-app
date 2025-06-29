@@ -1,0 +1,138 @@
+{
+  "name": "PocketBizz - SME Accounting App",
+  "short_name": "PocketBizz",
+  "description": "Mobile-first accounting app untuk SME Malaysia - record transactions dalam 10 saat",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ee4d2d",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "ms-MY",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    {
+      "src": "/static/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/static/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/static/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/static/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/static/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/static/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/static/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/static/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Tambah Pendapatan",
+      "short_name": "Income",
+      "description": "Quick add income transaction",
+      "url": "/add-transaction?type=income",
+      "icons": [
+        {
+          "src": "/static/icons/income-shortcut.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Tambah Perbelanjaan", 
+      "short_name": "Expense",
+      "description": "Quick add expense transaction",
+      "url": "/add-transaction?type=expense",
+      "icons": [
+        {
+          "src": "/static/icons/expense-shortcut.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Scan Resit",
+      "short_name": "Scan",
+      "description": "Scan receipt with OCR",
+      "url": "/scan-receipt",
+      "icons": [
+        {
+          "src": "/static/icons/scan-shortcut.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Laporan",
+      "short_name": "Reports",
+      "description": "View business reports",
+      "url": "/reports",
+      "icons": [
+        {
+          "src": "/static/icons/reports-shortcut.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/screenshots/dashboard-mobile.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Dashboard view pada mobile"
+    },
+    {
+      "src": "/static/screenshots/scan-receipt-mobile.png", 
+      "sizes": "540x720",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Smart receipt scanning"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "dir": "ltr",
+  "protocol_handlers": [
+    {
+      "protocol": "web+pocketbizz",
+      "url": "/?action=%s"
+    }
+  ]
+}
